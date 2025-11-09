@@ -2,3 +2,8 @@ extends ../layouts/default.pug
 
 block main
 	h1 Welcome to #{pageTitle}
+
+	ul 
+		each tour in toursList
+			li #{tour.name} - #{tour.time} - #{tour.vehicle}
+				

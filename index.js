@@ -1,5 +1,20 @@
 const express = require("express");
+require("dotenv").config();
 const path = require("path");
+const mongoose = require("mongoose");
+
+mongoose.connect(process.env.DATABASE);
+
+const Tour = mongoose.model(
+  "Tour",
+  {
+    name: String,
+    time: String,
+    vehicle: String,
+  },
+  "tours"
+);
+
 const app = express();
 const port = 3000;
 
@@ -19,12 +34,19 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/tours", (req, res) => {
+app.get("/tours", async (req, res) => {
+  const toursList = await Tour.find({});
+
+  console.log(toursList);
   res.render("client/pages/tour-list", {
     pageTitle: "Danh sách tours",
+    toursList: toursList,
   });
 });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
+// ntuancuong2005_db_user
+// onMygY1AhsddcO23
