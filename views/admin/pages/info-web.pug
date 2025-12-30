@@ -5,9 +5,9 @@ block main
 	main.main
 		h1.box-title Thông tin website
 		.section-8
-			form(action="")
+			form(action="" id="info-web-form")
 				.inner-group 
-					label.inner-label(for="name") Tên website
+					label.inner-label(for="name") Tên website *
 					input(type="text" id="name" name="name" placeholder="Nhập tên website")
 				.inner-group 
 					label.inner-label(for="phone") Số điện thoại
@@ -16,8 +16,8 @@ block main
 					label.inner-label(for="email") Email 
 					input(type="text" id="email" name="email" placeholder="Nhập email")
 				.inner-group 
-					label.inner-label(for="adress") Địa chỉ 
-					input(type="text" id="adress" name="adress" placeholder="Nhập địa chỉ")
+					label.inner-label(for="address") Địa chỉ 
+					input(type="text" id="address" name="address" placeholder="Nhập địa chỉ")
 				.inner-group
 					label.inner-label(for="logo") Logo
 					.inner-upload-image

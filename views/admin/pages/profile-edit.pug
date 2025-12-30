@@ -5,16 +5,16 @@ block main
 		h1.box-title Thông tin cá nhân 
 
 		.section-8
-			form(action="")
+			form(action="" id="profile-edit-form")
 				.inner-group 
 					label.inner-label(for="fullName") Họ tên
-					input(type="text" id="fullName" name="fullName" value="Lê Văn A")
+					input(type="text" id="fullName" name="fullName" placeholder="Lê Văn A")
 				.inner-group 
 					label.inner-label(for="email") Email
-					input(type="email" id="email" name="email" value="levana@gmail.com")
+					input(type="email" id="email" name="email" placeholder="levana@gmail.com")
 				.inner-group 
 					label.inner-label(for="phone") Số điện thoại
-					input(type="text" id="phone" name="phone" value="0123456789")
+					input(type="text" id="phone" name="phone" placeholder="0123456789")
 				.inner-group 
 					label.inner-label Chức vụ
 					input(type="text" value="Giám đốc" readonly)

@@ -138,8 +138,10 @@ block main
 										span x
 										span 7.990.000
 					.inner-bill
-						.inner-code
+						form(id="code-form").inner-code
 							input(
+								id="code-input"
+								name="code"
 								placeholder="Nhập mã giảm giá" 
 								type="text"
 								)
@@ -153,22 +155,28 @@ block main
 						.inner-box.inner-total-price
 							.inner-label Thanh Toán
 							.inner-value 17.070.000
-				.inner-payment
+				form(id="payment-form").inner-payment
 					.inner-info
 						.inner-title Thông Tin Khách Hàng
-						form.inner-contact(action="")
+						.inner-contact(action="")
 							.inner-input
 								input(
-									placeholder="Họ và tên" 
+									id="fullname-input"
+									name="fullname"
+									placeholder="Họ và tên *" 
 									type="text"
 									)
 							.inner-input
 								input(
-									placeholder="Số điện thoại" 
+									id="phone-input"
+									name="phone"
+									placeholder="Số điện thoại *" 
 									type="text"
 									)
 							.inner-input
 								input(
+									id="note-input"
+									name="note"
 									placeholder="Ghi chú" 
 									type="text"
 									)
@@ -176,21 +184,27 @@ block main
 						.inner-title Chọn phương thức thanh toán
 						.inner-select
 							.inner-item
-								input#payment-method-1(
-									name="payment-method" 
+								input(
+									id="methodMoney"
+									name="method" 
+									value="money"
 									type="radio"
+									checked=""
 									)
 								label(for="payment-method-1") Thanh toán tiền mặt khi đi tour
 							.inner-item
-								input#payment-method-2(
-									name="payment-method" 
+								input(
+									id="methodMomo"
+									name="method" 
+									value="momo"
 									type="radio"
 									)
 								label(for="payment-method-2") Ví Momo
 							.inner-item
-								input#payment-method-3(
-									checked="" 
-									name="payment-method" 
+								input(
+									id="methodBank"
+									name="method"
+									value="bank" 
 									type="radio"
 									)
 								label(for="payment-method-3") Chuyển khoản ngân hàng
@@ -205,5 +219,4 @@ block main
 							.inner-item
 								.inner-label STK:
 								span 123456789
-					.inner-button
-						button ĐẶT TOUR
+					button.inner-button ĐẶT TOUR

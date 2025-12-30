@@ -5,7 +5,7 @@ block main
 	main.main
 		h1.box-title Tạo tour
 		.section-8
-			form(action="")
+			form(action="" id="tour-create-form")
 				.inner-group 
 					label.inner-label(for="name") Tên tour
 					input(type="text" id="name" name="name" placeholder="Nhập tên tour")
@@ -13,16 +13,16 @@ block main
 					label.inner-label(for="parent") Danh mục 
 					select(id="parent" name="parent")
 						option(value="") -- Chọn danh mục --
-						option(value="") Danh mục 1
-						option(value="") Danh mục 2
+						option(value="1") Danh mục 1
+						option(value="2") Danh mục 2
 				.inner-group 
 					label.inner-label(for="position") Vị trí
 					input(type="text" id="position" name="position" placeholder="Nhập vị trí hiển thị")
 				.inner-group 
 					label.inner-label(for="status") Trạng thái
 					select(id="status" name="status")
-						option(value="") Hoạt động
-						option(value="") Tạm dừng
+						option(value="1") Hoạt động
+						option(value="2") Tạm dừng
 				.inner-group.inner-two-col
 					label.inner-label(for="avatar") Ảnh đại diện
 					.inner-upload-image
@@ -32,51 +32,51 @@ block main
 					.inner-list
 						.inner-item 
 							label.inner-label(for="old-price-adult") Người lớn
-							input(type="text" id="old-price-adult" name="old-price-adult") 
+							input(type="text" id="old-price-adult" name="oldPriceAdult") 
 						.inner-item 
 							label.inner-label(for="old-price-child") Trẻ em
-							input(type="text" id="old-price-child" name="old-price-child") 
+							input(type="text" id="old-price-child" name="oldPriceChild") 
 						.inner-item
 							label.inner-label(for="old-price-baby") Em bé
-							input(type="text" id="old-price-baby" name="old-price-baby") 
+							input(type="text" id="old-price-baby" name="oldPriceBaby") 
 				.inner-group 
 					label.inner-label Giá mới
 					.inner-list
 						.inner-item 
 							label.inner-label(for="new-price-adult") Người lớn
-							input(type="text" id="new-price-adult" name="new-price-adult") 
+							input(type="text" id="new-price-adult" name="newPriceAdult") 
 						.inner-item 
 							label.inner-label(for="new-price-child") Trẻ em
-							input(type="text" id="new-price-child" name="new-price-child") 
+							input(type="text" id="new-price-child" name="newPriceChild") 
 						.inner-item
 							label.inner-label(for="new-price-baby") Em bé
-							input(type="text" id="new-price-baby" name="new-price-baby") 
+							input(type="text" id="new-price-baby" name="newPriceBaby") 
 				.inner-group 
 					label.inner-label Còn lại 
 					.inner-list
 						.inner-item 
 							label.inner-label(for="adult") Người lớn
-							input(type="text" id="adult" name="adult") 
+							input(type="text" id="adult" name="stockAdult") 
 						.inner-item 
 							label.inner-label(for="child") Trẻ em
-							input(type="text" id="child" name="child") 
+							input(type="text" id="child" name="stockChild") 
 						.inner-item
 							label.inner-label(for="baby") Em bé
-							input(type="text" id="baby" name="baby")
+							input(type="text" id="baby" name="stockBaby")
 				.inner-group 
 					label.inner-label Những địa điểm 
 					.inner-checkbox 
 						.inner-item 
-							+checkbox-30("loacation","loacation-1")
+							+checkbox-30("loacation","loacation-1","id-ha-noi")
 							label(for="loacation-1") Hà Nội
 						.inner-item 
-							+checkbox-30("loacation","loacation-2")
+							+checkbox-30("loacation","loacation-2","id-ho-chi-minh")
 							label(for="loacation-2") Hồ Chí Minh
 						.inner-item 
-							+checkbox-30("loacation","loacation-3")
+							+checkbox-30("loacation","loacation-3","id-da-nang")
 							label(for="loacation-3") Đà Nẵng
 						.inner-item 
-							+checkbox-30("loacation","loacation-4")
+							+checkbox-30("loacation","loacation-4","id-nha-trang")
 							label(for="loacation-4") Nha Trang
 				.inner-group 
 					label.inner-label(for="duration") Thời gian
@@ -86,7 +86,7 @@ block main
 					input(type="text" id="transportation" name="transportation" placeholder="Nhập phương tiện")
 				.inner-group
 					label.inner-label(for="departure-date") Ngày khởi hành
-					input(type="text" id="departure-date" name="departure-date" placeholder="Nhập ngày khởi hành")
+					input(type="date" id="departure-date" name="departureDate" placeholder="Nhập ngày khởi hành")
 				.inner-group.inner-two-col
 					label.inner-label(for="description") Thông tin tour 
 					textarea(id="description" name="description")

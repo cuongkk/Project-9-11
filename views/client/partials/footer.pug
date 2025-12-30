@@ -1,13 +1,16 @@
 .footer
   .container
     .inner-wrap
-      form.inner-form(action="#")
+      .inner-form(action="#")
         .inner-desc Đăng ký ngay để không bỏ lỡ các chương trình của chúng tôi
-        .inner-form-input
+        form(id="email-form").inner-form-input
           input.inner-input(
-            placeholder="Nhập email của bạn ..." 
-            type="text"
-            )
+						id="email-input"
+						name="email"
+						type="email"
+						placeholder="Nhập email của bạn ..."
+						autocomplete="email"
+					)
           button.inner-button Đăng Ký Ngay
       nav.inner-footer-middle
         ul.inner-header

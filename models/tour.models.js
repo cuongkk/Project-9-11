@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-module.exports.Tour = mongoose.model(
+const Tour = mongoose.model(
   "Tour",
   {
     name: String,
@@ -9,3 +9,5 @@ module.exports.Tour = mongoose.model(
   },
   "tours"
 );
+
+module.exports = Tour;

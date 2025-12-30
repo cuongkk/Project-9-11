@@ -5,9 +5,9 @@ block main
   .form-account
     h1.inner-title Đăng nhập
     .inner-desc Vui lòng nhập email và mật khẩu để tiếp tục
-    form(action="" class="inner-form")
+    form(action="" class="inner-form" id="login-form")
       .inner-group
-        label(for="email") Email 
+        label(for="email") Email * 
         input(
           type="email" 
           id="email" 
@@ -15,7 +15,7 @@ block main
           placeholder="Ví dụ: levana@gmail.com"
           class="inner-control")
       .inner-group
-        label(for="password") Mật khẩu
+        label(for="password") Mật khẩu *
         input(
           type="password"
           id="password"
@@ -26,6 +26,7 @@ block main
           +checkbox-30("remember", "remember")
           label(
             for="remember"
+						name="remember"
           ) Nhớ mật khẩu
         a(href=`/${pathAdmin}/account/forgot-password` class="inner-link") Quên mật khẩu?
       button.inner-button Đăng nhập

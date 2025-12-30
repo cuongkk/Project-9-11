@@ -273,14 +273,94 @@ if (boxTourSchedule) {
 // Email Form
 
 const emailForm = document.querySelector("#email-form");
-console.log(emailForm);
 if (emailForm) {
   const validator = new JustValidate("#email-form");
-
-  validator.addField("#email-input", [
-    {
-      rulte: "required",
-    },
-  ]);
+  validator
+    .addField("#email-input", [
+      {
+        rule: "required",
+        errorMessage: "Vui lòng nhập email của bạn",
+      },
+      {
+        rule: "email",
+        errorMessage: "Vui lòng nhập đúng định dạng email",
+      },
+    ])
+    .onSuccess((event) => {
+      const email = event.target.email.value;
+    });
 }
 // End Email Form
+
+// Code Form
+
+const codeForm = document.querySelector("#code-form");
+if (codeForm) {
+  const validator = new JustValidate("#code-form");
+  validator
+    .addField("#code-input", [
+      {
+        rule: "required",
+        errorMessage: "Vui lòng nhập mã giảm giá của bạn",
+      },
+    ])
+    .onSuccess((event) => {
+      const email = event.target.code.value;
+    });
+}
+
+// End Code Form
+
+// Payment Form
+
+const paymentForm = document.querySelector("#payment-form");
+if (paymentForm) {
+  const validator = new JustValidate("#payment-form");
+  validator
+    .addField("#fullname-input", [
+      {
+        rule: "required",
+        errorMessage: "Vui lòng nhập họ và tên",
+      },
+      {
+        rule: "minLength",
+        value: 5,
+        errorMessage: "Họ và tên phải có ít nhất 5 ký tự",
+      },
+      {
+        rule: "maxLength",
+        value: 50,
+        errorMessage: "Họ và tên không được vượt quá 50 ký tự",
+      },
+    ])
+    .addField("#phone-input", [
+      {
+        rule: "required",
+        errorMessage: "Vui lòng nhập số điện thoại",
+      },
+      {
+        rule: "customRegexp",
+        value: /^(?:\+?84|0)(?:\s|-)?[1-9]\d{8}$/,
+        errorMessage: "Vui lòng nhập đúng định dạng số điện thoại",
+      },
+    ])
+    .onSuccess((event) => {
+      const fullname = event.target.fullname.value;
+      const phone = event.target.phone.value;
+      const note = event.target.note.value;
+      const paymentMethod = event.target.method.value;
+    });
+
+  listInputMethod = paymentForm.querySelectorAll("input[name='method']");
+  const bankInfo = paymentForm.querySelector(".inner-bank");
+
+  listInputMethod.forEach((input) => {
+    input.addEventListener("change", () => {
+      if (input.value === "bank") {
+        bankInfo.classList.add("active");
+      } else {
+        bankInfo.classList.remove("active");
+      }
+    });
+  });
+}

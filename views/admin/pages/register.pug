@@ -5,7 +5,7 @@ block main
   .form-account
     h1.inner-title Đăng ký
     .inner-desc Tạo một tài khoản để tiếp tục
-    form(action="" class="inner-form")
+    form(action="" class="inner-form" id="register-form")
       .inner-group
         label(for="name") Họ tên
         input(
@@ -31,11 +31,10 @@ block main
           class="inner-control")
       .inner-meta 
         .inner-confirm 
-          +checkbox-30("accept", "accept")
+          +checkbox-30("agree", "agree")
           label(
-            for="accept"
-          ) Tôi chấp nhận các điều khoản và điều kiện
-        a(href=`/${pathAdmin}/account/forgot-password` class="inner-link") Quên mật khẩu?
+            for="agree"
+          ) Tôi chấp nhận các điều khoản và điều kiện *
       button.inner-button Đăng Ký
       .inner-more
         span Bạn đã có tài khoản?

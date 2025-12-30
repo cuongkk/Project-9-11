@@ -25,6 +25,10 @@ app.use(express.static(path.join(__dirname, "public")));
 // Tạo biến toàn cục cho pug
 app.locals.pathAdmin = pathAdmin;
 
+// Cho phép gửi dữ liệu dạng json
+app.use(express.json());
+
+// Thiết lập đường dẫn
 app.use(`/${pathAdmin}`, adminRoutes);
 app.use("/", clientRoutes);
 

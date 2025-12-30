@@ -86,6 +86,15 @@ textarea {
   justify-content: center;
   align-items: center;
   gap: 15px;
+  position: relative;
+}
+
+.form-account .inner-form .inner-group .just-validate-error-label {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  font-size: 14px;
+  color: #ff0000;
 }
 
 .form-account .inner-form .inner-group label {
@@ -102,6 +111,7 @@ textarea {
   background-color: #f1f4f9;
   border: 1px solid #d8d8d8;
   border-radius: 8px;
+  font-size: 18px;
 }
 
 .form-account .inner-form .inner-group .inner-control::placeholder {
@@ -121,12 +131,21 @@ textarea {
 
 .form-account .inner-form .inner-meta .inner-confirm {
   display: flex;
+  flex-wrap: wrap;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 10px;
+  position: relative;
 }
 
+.form-account .inner-form .inner-meta .inner-confirm .just-validate-error-label {
+  position: absolute;
+  left: 0;
+  bottom: -20px;
+  font-size: 14px;
+  color: #ff0000;
+}
 .form-account .inner-form .inner-meta a {
   font-weight: 600;
   font-size: 18px;
@@ -144,9 +163,10 @@ textarea {
   font-weight: 700;
   font-size: 20px;
   color: #ffffff;
+  text-align: center;
 }
 
-.form-account .inner-form .inner-more {
+.form-account .inner-more {
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -154,7 +174,7 @@ textarea {
   gap: 10px;
 }
 
-.form-account .inner-form .inner-more span {
+.form-account .inner-more span {
   font-weight: 600;
   font-size: 18px;
   color: var(--color-text);
@@ -164,7 +184,7 @@ textarea {
   align-items: center;
 }
 
-.form-account .inner-form .inner-more a {
+.form-account .inner-more a {
   font-weight: 700;
   font-size: 18px;
   text-decoration: underline solid var(--color-primary);
@@ -940,7 +960,7 @@ h1.box-title {
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 40px;
+  gap: 30px;
 }
 
 .section-8 .inner-list .inner-item .inner-label {
@@ -1663,3 +1683,15 @@ h1.box-title {
 }
 
 /* End Checkbox-wrapper-30 */
+
+/* Just Validate */
+
+.just-validate-error-field {
+  border-color: red !important;
+}
+
+.just-validate-success-field {
+  border-color: green !important;
+}
+
+/* End-Just Validate */
