@@ -1,0 +1,18 @@
+extends ../layouts/default.pug
+
+block main
+	main.main 
+		h1.box-title Cài đặt chung
+		.section-1 
+			a(href=`/${pathAdmin}/setting/info-web` class="inner-item")
+				img(src='/admin/assets/images/icon-section1-4.png').inner-icon-1
+				.inner-content 
+					.inner-text Thông tin website
+			a(href=`/${pathAdmin}/setting/account-admin/list` class="inner-item")
+				img(src='/admin/assets/images/icon-section1-5.png').inner-icon-2
+				.inner-content 
+					.inner-text Tài khoản quản trị
+			a(href=`/${pathAdmin}/setting/role/list` class="inner-item")
+				img(src='/admin/assets/images/icon-section1-6.png').inner-icon-3
+				.inner-content 
+					.inner-text Nhóm quyền

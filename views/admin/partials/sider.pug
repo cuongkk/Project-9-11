@@ -1,0 +1,41 @@
+nav.sider
+	ul.inner-menu
+		li
+			a(href=`/${pathAdmin}/dashboard`)
+				<i class="fa-solid fa-gauge-high"></i>
+				label.inner-label Tổng quan 
+		li
+			a(href=`/${pathAdmin}/category/list`)
+				<i class="fa-solid fa-table-cells-large"></i>
+				label.inner-label Quản lý danh mục
+		li
+			a(href=`/${pathAdmin}/tour/list`)
+				<i class="fa-solid fa-table-list"></i>
+				label.inner-label Quản lý tour
+		li
+			a(href=`/${pathAdmin}/order/list`)
+				<i class="fa-solid fa-list-check"></i>
+				label.inner-label Quản lý đơn hàng
+		li
+			a(href=`/${pathAdmin}/user/list`)
+				<i class="fa-solid fa-user"></i>
+				label.inner-label Quản lý người dùng
+		li
+			a(href=`/${pathAdmin}/contact/list`)
+				<i class="fa-solid fa-user-group"></i>
+				label.inner-label Thông tin liên hệ
+	hr
+	ul.inner-menu
+		li
+			a(href=`/${pathAdmin}/setting/list`)
+				<i class="fa-solid fa-gear"></i>
+				label.inner-label Cài đặt chung
+		li
+			a(href=`/${pathAdmin}/profile/edit`)
+				<i class="fa-solid fa-user-gear"></i>
+				label.inner-label Thông tin cá nhân
+		li
+			a(href="javascript:;)").logout
+				<i class="fa-solid fa-power-off"></i>
+				label.inner-label Đăng xuất
+div.inner-overlay

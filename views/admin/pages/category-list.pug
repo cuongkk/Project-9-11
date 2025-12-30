@@ -1,0 +1,116 @@
+extends ../layouts/default.pug
+include ../mixins/checkbox-30.pug
+
+block main
+	main.main 
+		h1.box-title Quản lý danh mục
+		.main1
+			//- Section 4
+			.section-4
+				.inner-wrap
+					.inner-item.inner-label
+						<i class="fa-solid fa-filter"></i> Bộ lọc
+					.inner-item
+						select
+							option(value="") Trạng thái
+							option(value="") Hoạt động
+							option(value="") Tạm dừng
+					.inner-item
+						select
+							option(value="") Người tạo
+							option(value="") Lê Văn A
+							option(value="") Lê Văn B
+					.inner-item.inner-date
+						input(type="date")
+						span -
+						input(type="date")
+					.inner-item.inner-reset
+						<i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
+			//- End Section 4
+
+			//- Section 5
+			.section-5
+				.inner-wrap
+					.inner-change-status
+						.inner-item
+							select
+								option(value="") -- Hành động --
+								option(value="") Hoạt động
+								option(value="") Dừng hoạt động
+								option(value="") Xóa
+						.inner-item
+							button Áp dụng
+					.inner-search
+						<i class="fa-solid fa-magnifying-glass"></i>
+						input(type="text" placeholder="Tìm kiếm")
+					.inner-button-create
+						a(href=`/${pathAdmin}/category/create`)  + Tạo mới
+			//- End Section 5
+
+		//- Section 6
+		.section-6 
+			.table-2 
+				table 
+					thead 
+						tr 
+							th.text-left
+								+checkbox-30("", "")
+							th.text-left Tên danh mục
+							th.text-center Ảnh đại diện
+							th.text-center Vị trí
+							th.text-center Trạng thái
+							th.text-left Tạo bởi
+							th.text-left Cập nhật bởi
+							th.text-left Hành động
+					tbody 
+						tr 
+							td.text-left
+								+checkbox-30("", "")
+							td.text-left Danh mục 1
+							td.text-center
+								img.inner-image
+							td.text-center 1
+							td.text-center
+								.status.status-green Hoạt động 
+							td.text-left
+								div Lê Văn A
+								div.inner-small 16:30 - 20/10/2024
+							td.text-left
+								div Lê Văn A
+								div.inner-small 16:30 - 20/10/2024
+							td.text-left
+								.box-actions 
+									a(href="#" class="inner-edit")
+										<i class="fa-solid fa-pen-to-square"></i>
+									a(href="#" class="inner-remove")
+										<i class="fa-solid fa-trash-can"></i>
+						tr 
+							td.text-left
+								+checkbox-30("", "")
+							td.text-left Danh mục 1
+							td.text-center
+								img.inner-image
+							td.text-center 1
+							td.text-center
+								.status.status-red Tạm dừng
+							td.text-left
+								div Lê Văn A
+								div.inner-small 16:30 - 20/10/2024
+							td.text-left
+								div Lê Văn A
+								div.inner-small 16:30 - 20/10/2024
+							td.text-left
+								.box-actions 
+									a(href="#" class="inner-edit")
+										<i class="fa-solid fa-pen-to-square"></i>
+									a(href="#" class="inner-remove")
+										<i class="fa-solid fa-trash-can"></i>
+			.pagination
+				span(class="inner-label") Hiển thị 1 - 9 của 78
+				select(class="inner-pagination")
+					option Trang 1
+					option Trang 2
+					option Trang 3
+		//- End Section 6
+
+		

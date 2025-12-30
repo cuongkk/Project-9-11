@@ -2,12 +2,37 @@ doctype html
 html 
 	head 
 		title #{pageTitle}
-		link(rel="stylesheet", href="/client/assets/css/style.css")
+		meta(charset="UTF-8")
+		meta(
+			content="width=device-width, initial-scale=1.0" 
+			name="viewport"
+			)
+		link(
+			href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.7/viewer.css" 
+			rel="stylesheet"
+			)
+		link(
+			href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" 
+			rel="stylesheet"
+			)
+		link(
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" 
+			rel="stylesheet"
+			)
+		link(
+  		href="/client/assets/css/style.css" 
+  		rel="stylesheet"
+  	)
 	body
+		include ../partials/top-header.pug
 		include ../partials/header.pug
 
 		block main
 
 		include ../partials/footer.pug
+		include ../partials/box-content.pug
 
-		script(src="/client/assets/js/scripts.js")
+		script(src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js")
+		script(src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.7/viewer.js")
+		script(src="https://unpkg.com/just-validate@latest/dist/just-validate.production.min.js")
+		script(src="/client/assets/js/script.js")

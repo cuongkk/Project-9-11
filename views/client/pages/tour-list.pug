@@ -1,9 +1,127 @@
 extends ../layouts/default.pug
+include ../mixins/product-item.pug
+include ../mixins/breadcrumb.pug
 
 block main
-	h1 Welcome to #{pageTitle}
-
-	ul 
-		each tour in toursList
-			li #{tour.name} - #{tour.time} - #{tour.vehicle}
-				
+	+breadcrumb()
+	.section-9
+		.container
+			.inner-wrap
+				.inner-left
+					.inner-box-filter
+						.inner-filter-list
+							.inner-header
+								.inner-title Bộ Lọc
+								i.fa-solid.fa-filter
+							.inner-group
+								.inner-label Điểm đi
+								select
+									option(value="") --Chọn điểm đi--
+									option(value="") Hà Nội
+									option(value="") Hồ Chí Minh
+									option(value="") Đà Nẵng
+							.inner-group
+								.inner-label Điểm đến
+								select
+									option(value="") --Chọn điểm đến--
+									option(value="") Hà Nội
+									option(value="") Hồ Chí Minh
+									option(value="") Đà Nẵng
+							.inner-group
+								.inner-label Ngày khởi hành
+								input.inner-input(type="date")
+							.inner-group
+								.inner-label Số lượng Hành Khách
+								.inner-input-list
+									.inner-input-item
+										.inner-label Người lớn
+										input(
+											value="0" 
+											type="number"
+											)
+									.inner-input-item
+										.inner-label Trẻ em
+										input(
+											value="0" 
+											type="number"
+											)
+									.inner-input-item
+										.inner-label Em bé
+										input(
+											value="0" 
+											type="number"
+											)
+							.inner-group
+								.inner-label Mức giá
+								select
+									option(value="") --Chọn mức giá--
+									option(value="") Dưới 5 triệu
+									option(value="") Từ 5 triệu đến 10 triệu
+									option(value="") Trên 10 triệu
+							button.inner-button Áp Dụng
+				.inner-right
+					.inner-info
+						.inner-title Tour Nước Ngoài
+						.inner-desc
+							| Du lịch Châu Á: là châu lục lớn và đông dân nhất thế giới. Châu Á cũng có nhiều danh lam thắng cảnh đẹp tại một số quốc gia như Hàn Quốc, Nhật Bản, Trung Quốc, Việt Nam,... và VK
+							|   Travel là nhà tổ chức du lịch chuyên nghiệp hàng đầu Châu Á, đã 5 lần liên tiếp nhận giải TTG Travel Awards. Hãy cùng 28.Travel du lịch Châu Á để tận hưởng những dịch vụ tốt nhất.
+						.inner-filter
+							.inner-group.inner-group-1
+								.inner-label
+									span Sắp xếp :
+								button.inner-button
+									| Giá tăng dần
+									img(
+										alt="Arrow Up Icon" 
+										src="/client/assets/image/icon-up-right.png"
+										)
+								button.inner-button
+									| Giá giảm dần
+									img(
+										alt="Arrow Down Icon" 
+										src="/client/assets/image/icon-down-right.png"
+										)
+							.inner-group.inner-group-2
+								button.inner-button.inner-button-active
+									| Khuyến mãi Hot
+									img(
+										alt="Sale Icon" 
+										src="/client/assets/image/icon-sale.png"
+										)
+								button.inner-button
+									| Xem Nhiều
+									img(
+										alt="Eye Icon" 
+										src="/client/assets/image/icon-eye.png"
+										)
+							.inner-group.inner-group-3
+								.inner-total-item
+									| Tẩt cả:
+									span 101 tour
+								button.inner-list-filter
+									.inner-title Bộ Lọc
+									i.fa-solid.fa-filter
+					.inner-list-item
+						+product-item()
+						+product-item()
+						+product-item()
+						+product-item()
+						+product-item()
+						+product-item()
+						+product-item()
+					.inner-pagination
+						ul.inner-list
+							li.inner-item
+								button.inner-button
+									i.fa-solid.fa-angles-left
+							li.inner-item.inner-item-active
+								button.inner-button.inner-button-active 1
+							li.inner-item
+								button.inner-button 2
+							li.inner-item
+								button.inner-button 3
+							li.inner-item
+								button.inner-button 4
+							li.inner-item
+								button.inner-button
+									i.fa-solid.fa-angles-right
