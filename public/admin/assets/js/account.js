@@ -23,6 +23,32 @@ if (loginForm) {
       const email = event.target.email.value;
       const password = event.target.password.value;
       const rememberPassword = event.target.remember.checked;
+
+      const dataFinal = {
+        email: email,
+        password: password,
+      };
+
+      fetch(`/${pathAdmin}/account/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataFinal),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.result == "error") {
+            console.log(data.message);
+            notyf.error(data.message);
+          }
+
+          if (data.result == "success") {
+            // notyf.success(data.message);
+            Notify(data.result, data.message);
+            window.location.href = `/${pathAdmin}/dashboard`;
+          }
+        });
     });
 }
 
@@ -40,8 +66,8 @@ if (registerForm) {
       },
       {
         rule: "minLength",
-        value: 3,
-        errorMessage: "Họ tên phải có ít nhất 3 ký tự",
+        value: 5,
+        errorMessage: "Họ tên phải có ít nhất 5 ký tự",
       },
       {
         rule: "maxLength",
@@ -97,7 +123,7 @@ if (registerForm) {
         password: password,
       };
 
-      fetch("/admin/account/register", {
+      fetch(`/${pathAdmin}/account/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,12 +133,13 @@ if (registerForm) {
         .then((response) => response.json())
         .then((data) => {
           if (data.result == "error") {
-            alert(data.message);
+            notyf.error(data.message);
           }
 
           if (data.result == "success") {
-            alert(data.message);
-            window.location.href = "/admin/account/register-initial";
+            // notyf.success(data.message);
+            Notify(data.result, data.message);
+            window.location.href = `/${pathAdmin}/account/register-initial`;
           }
         });
     });

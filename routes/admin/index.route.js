@@ -10,17 +10,19 @@ const contactRouter = require("./contact.route");
 const settingRouter = require("./setting.route");
 const profileRouter = require("./profile.route");
 
-router.use("/account", accountRouter);
-router.use("/dashboard", dashboardController);
-router.use("/category", categoryRouter);
-router.use("/tour", tourRouter);
-router.use("/order", orderRouter);
-router.use("/user", userRouter);
-router.use("/contact", contactRouter);
-router.use("/setting", settingRouter);
-router.use("/profile", profileRouter);
+const authMiddleware = require("../../middlewares/admin/auth.middleware.js");
 
-router.use((req, res) => {
+router.use("/account", accountRouter);
+router.use("/dashboard", authMiddleware.verifyToken, dashboardController);
+router.use("/category", authMiddleware.verifyToken, categoryRouter);
+router.use("/tour", authMiddleware.verifyToken, tourRouter);
+router.use("/order", authMiddleware.verifyToken, orderRouter);
+router.use("/user", authMiddleware.verifyToken, userRouter);
+router.use("/contact", authMiddleware.verifyToken, contactRouter);
+router.use("/setting", authMiddleware.verifyToken, settingRouter);
+router.use("/profile", authMiddleware.verifyToken, profileRouter);
+
+router.use(authMiddleware.verifyToken, (req, res) => {
   res.render("admin/pages/error-404", {
     pageTitle: "Trang không tồn tại",
   });

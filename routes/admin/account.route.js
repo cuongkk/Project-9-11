@@ -1,12 +1,15 @@
 const router = require("express").Router();
 
 const accountController = require("../../controllers/admin/account.controller.js");
+const accountValidate = require("../../validates/admin/account.validate.js");
 
 router.get("/login", accountController.login);
 
+router.post("/login", accountValidate.loginPost, accountController.loginPost);
+
 router.get("/register", accountController.register);
 
-router.post("/register", accountController.registerPost);
+router.post("/register", accountValidate.registerPost, accountController.registerPost);
 
 router.get("/register-initial", accountController.registerInitial);
 
@@ -15,5 +18,7 @@ router.get("/forgot-password", accountController.forgotPassword);
 router.get("/otp-password", accountController.otpPassword);
 
 router.get("/reset-password", accountController.resetPassword);
+
+router.get("/logout", accountController.logout);
 
 module.exports = router;
