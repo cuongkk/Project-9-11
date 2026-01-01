@@ -40,7 +40,6 @@ if (loginForm) {
         .then((response) => response.json())
         .then((data) => {
           if (data.result == "error") {
-            console.log(data.message);
             notyf.error(data.message);
           }
 
@@ -165,31 +164,32 @@ if (forgotPasswordForm) {
     ])
     .onSuccess((event) => {
       const email = event.target.email.value;
+
+      const dataFinal = {
+        email: email,
+      };
+      fetch(`/${pathAdmin}/account/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataFinal),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.result == "error") {
+            notyf.error(data.message);
+          }
+
+          if (data.result == "success") {
+            // notyf.success(data.message);
+            Notify(data.result, data.message);
+            window.location.href = `/${pathAdmin}/account/otp-password?email=${email}`;
+          }
+        });
     });
 }
 // End Forgot Password Form
-
-// OTP Password Form
-const otpPasswordForm = document.querySelector("#otp-password-form");
-if (otpPasswordForm) {
-  const validation = new JustValidate("#otp-password-form");
-  validation
-    .addField("#otp", [
-      {
-        rule: "required",
-        errorMessage: "Vui lòng nhập mã OTP",
-      },
-      {
-        rule: "customRegexp",
-        value: /^\d{6}$/,
-        errorMessage: "Mã OTP phải gồm 6 chữ số",
-      },
-    ])
-    .onSuccess((event) => {
-      const otp = event.target.otp.value;
-    });
-}
-// End OTP Password Form
 
 // Reset Password Form
 const resetPasswordForm = document.querySelector("#reset-password-form");
@@ -231,5 +231,72 @@ if (resetPasswordForm) {
     ])
     .onSuccess((event) => {
       const password = event.target.password.value;
+
+      const finalData = {
+        password: password,
+      };
+
+      fetch(`/${pathAdmin}/account/reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(finalData),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.result == "error") {
+            notyf.error(data.message);
+          }
+          if (data.result == "success") {
+            // notyf.success(data.message);
+            Notify(data.result, data.message);
+            window.location.href = `/${pathAdmin}/account/login`;
+          }
+        });
     });
 }
+
+// OTP Password Form
+const otpPasswordForm = document.querySelector("#otp-password-form");
+if (otpPasswordForm) {
+  const validation = new JustValidate("#otp-password-form");
+  validation
+    .addField("#otp", [
+      {
+        rule: "required",
+        errorMessage: "Vui lòng nhập mã OTP",
+      },
+    ])
+    .onSuccess((event) => {
+      const otp = event.target.otp.value;
+      const urlParams = new URLSearchParams(window.location.search);
+      const email = urlParams.get("email");
+
+      const dataFinal = {
+        email: email,
+        otp: otp,
+      };
+
+      fetch(`/${pathAdmin}/account/otp-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataFinal),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.result == "error") {
+            notyf.error(data.message);
+          }
+
+          if (data.result == "success") {
+            // notyf.success(data.message);
+            Notify(data.result, data.message);
+            window.location.href = `/${pathAdmin}/account/reset-password?email=${email}`;
+          }
+        });
+    });
+}
+// End OTP Password Form
