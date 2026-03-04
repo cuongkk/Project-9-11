@@ -25,7 +25,7 @@ module.exports.loginPost = async (req, res, next) => {
 
 module.exports.registerPost = async (req, res, next) => {
   const schema = Joi.object({
-    name: Joi.string().min(5).max(50).required().messages({
+    fullName: Joi.string().min(5).max(50).required().messages({
       "string.empty": "Vui lòng nhập họ và tên",
       "string.min": "Họ và tên phải có ít nhất 5 ký tự",
       "string.max": "Họ và tên không được vượt quá 50 ký tự",

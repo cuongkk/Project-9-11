@@ -40,14 +40,7 @@ module.exports.loginPost = async (req, res) => {
   }
 
   // Tạo JWT token
-  const token = jwt.sign(
-    {
-      id: existAccount.id,
-      email: existAccount.email,
-    },
-    process.env.JWT_SECRET_KEY,
-    { expiresIn: rememberPassword ? "30d" : "7d" }
-  );
+  const token = jwt.sign({ _id: existAccount._id }, process.env.JWT_SECRET_KEY, { expiresIn: rememberPassword ? "30d" : "7d" });
 
   // Lưu token vào cookie
   res.cookie("token", token, {
@@ -174,9 +167,11 @@ module.exports.otpPasswordPost = async (req, res) => {
 
   await forgotPasswordModel.deleteOne({ email: email, otp: otp });
 
+  const existAccount = await accountAdmin.findOne({ email: email });
   const token = jwt.sign(
     {
-      email: existRecord.email,
+      _id: existAccount._id,
+      email: existAccount.email,
     },
     process.env.JWT_SECRET_KEY,
     { expiresIn: "1d" }
@@ -203,11 +198,13 @@ module.exports.resetPassword = (req, res) => {
 module.exports.resetPasswordPost = async (req, res) => {
   const { password } = req.body;
 
+  console.log(password);
   try {
-    const { email } = req.account;
+    const { email, _id } = req.account;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    console.log(_id, email);
     await accountAdmin.updateOne({ email: email }, { $set: { password: hashedPassword } });
     res.json({
       result: "success",

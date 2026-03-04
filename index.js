@@ -14,7 +14,6 @@ const port = 3000;
 connectDB();
 
 //Thiết lập thư mục chứa pug
-// app.set("views", "./views");
 app.set("views", path.join(__dirname, "views"));
 
 //Thiết lập pug làm view engine
@@ -39,7 +38,7 @@ app.use(cookieParser());
 app.use(`/${pathAdmin}`, adminRoutes);
 app.use("/", clientRoutes);
 
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
   console.log(`Example app listening on port ${port}`);
 });
 

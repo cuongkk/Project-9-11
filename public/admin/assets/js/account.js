@@ -46,12 +46,12 @@ if (loginForm) {
           if (data.result == "success") {
             // notyf.success(data.message);
             Notify(data.result, data.message);
+            console.log("Login successful, redirecting to dashboard...");
             window.location.href = `/${pathAdmin}/dashboard`;
           }
         });
     });
 }
-
 // End Login Form
 
 // Register Form
@@ -59,7 +59,7 @@ const registerForm = document.querySelector("#register-form");
 if (registerForm) {
   const validation = new JustValidate("#register-form");
   validation
-    .addField("#name", [
+    .addField("#fullName", [
       {
         rule: "required",
         errorMessage: "Vui lòng nhập họ tên",
@@ -113,12 +113,12 @@ if (registerForm) {
       },
     ])
     .onSuccess((event) => {
-      const name = event.target.name.value;
+      const fullName = event.target.fullName.value;
       const email = event.target.email.value;
       const password = event.target.password.value;
 
       const dataFinal = {
-        name: name,
+        fullName: fullName,
         email: email,
         password: password,
       };

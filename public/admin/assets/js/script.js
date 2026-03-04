@@ -151,6 +151,30 @@ if (categoryCreateForm) {
       const status = event.target.status.value;
       const avatar = filepond.avatar.getFile()?.file;
       const description = tinymce.get("description").getContent();
+
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("parent", parent);
+      formData.append("position", position);
+      formData.append("status", status);
+      formData.append("avatar", avatar);
+      formData.append("description", description);
+
+      fetch(`/${pathAdmin}/category/create`, {
+        method: "POST",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.result == "error") {
+            notyf.error(data.message);
+          }
+          if (data.result == "success") {
+            notyf.success(data.message);
+            window.location.reload();
+            // window.location.href = `/${pathAdmin}/category`;
+          }
+        });
     });
 }
 

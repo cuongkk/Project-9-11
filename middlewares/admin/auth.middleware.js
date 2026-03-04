@@ -9,24 +9,21 @@ module.exports.verifyToken = async (req, res, next) => {
   }
 
   try {
-    const decode = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    const { email } = decode;
+    const existAccount = await accountAdmin.findOne({
+      _id: decoded._id,
+      status: "active",
+    });
 
-    const existAccount = await accountAdmin.findOne({ email: email, status: "active" });
-
-    console.log("a");
-    console.log(email);
     if (!existAccount) {
       res.clearCookie("token");
       return res.redirect(`/${pathAdmin}/account/login`);
     }
-    console.log("b");
 
     req.account = existAccount;
 
-    console.log(token);
-
+    res.locals.account = existAccount;
     next();
   } catch (error) {
     res.clearCookie("token");
