@@ -2,6 +2,7 @@ const { buildCategoryTree } = require("../../helpers/category.helper.js");
 
 const Category = require("../../models/category.model.js");
 const AccountAdmin = require("../../models/account-admin.model.js");
+const PaginationHelper = require("../../helpers/pagination.helper.js");
 const moment = require("moment");
 const slugify = require("slugify");
 
@@ -36,28 +37,14 @@ module.exports.list = async (req, res) => {
     find.slug = regex;
   }
 
-  // Phân trang
-  const limitItems = 2;
-  let page = 1;
-  if (req.query.page) {
-    page = parseInt(req.query.page);
-  }
-  const totalRecord = await Category.countDocuments(find);
-  const totalPage = Math.ceil(totalRecord / limitItems);
-  const skip = (page - 1) * limitItems;
-  const pagination = {
-    totalPage: totalPage,
-    totalRecord: totalRecord,
-    skip: skip,
-  };
-  // Hết Phân trang
+  const pagination = await PaginationHelper.pagination(Category, find, req);
 
   const categoryList = await Category.find(find)
     .sort({
       position: "asc",
     })
-    .limit(limitItems)
-    .skip(skip);
+    .limit(pagination.limitItems)
+    .skip(pagination.skip);
   const accountAdminList = await AccountAdmin.find({}).select("id fullName");
 
   for (const item of categoryList) {

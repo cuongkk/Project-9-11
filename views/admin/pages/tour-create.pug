@@ -1,5 +1,6 @@
 extends ../layouts/default.pug
 include ../mixins/checkbox-30.pug
+include ../mixins/options.pug
 
 block main
 	main.main
@@ -13,8 +14,7 @@ block main
 					label.inner-label(for="parent") Danh mục 
 					select(id="parent" name="parent")
 						option(value="") -- Chọn danh mục --
-						option(value="1") Danh mục 1
-						option(value="2") Danh mục 2
+						+options(categoryList)
 				.inner-group 
 					label.inner-label(for="position") Vị trí
 					input(type="text" id="position" name="position" placeholder="Nhập vị trí hiển thị")
@@ -65,19 +65,11 @@ block main
 							input(type="text" id="baby" name="stockBaby")
 				.inner-group 
 					label.inner-label Những địa điểm 
-					.inner-checkbox 
-						.inner-item 
-							+checkbox-30("loacation","loacation-1","id-ha-noi")
-							label(for="loacation-1") Hà Nội
-						.inner-item 
-							+checkbox-30("loacation","loacation-2","id-ho-chi-minh")
-							label(for="loacation-2") Hồ Chí Minh
-						.inner-item 
-							+checkbox-30("loacation","loacation-3","id-da-nang")
-							label(for="loacation-3") Đà Nẵng
-						.inner-item 
-							+checkbox-30("loacation","loacation-4","id-nha-trang")
-							label(for="loacation-4") Nha Trang
+					.inner-checkbox
+						each item in cityList
+							.inner-checkbox-item 
+								+checkbox-30("location", `location-${item.id}`, `id-${item.id}`)
+								label(for=`location-${item.id}`) #{item.name}
 				.inner-group 
 					label.inner-label(for="duration") Thời gian
 					input(type="text" id="duration" name="duration" placeholder="Nhập thời gian")

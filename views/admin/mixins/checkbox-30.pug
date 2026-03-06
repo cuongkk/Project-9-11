@@ -1,4 +1,4 @@
-mixin checkbox-30(name, id, value)
+mixin checkbox-30(name, id, value, checked = false)
 	.checkbox-wrapper-30
 		span.checkbox
 			input(
@@ -6,6 +6,7 @@ mixin checkbox-30(name, id, value)
 				id=id
 				name=name
 				value = value
+				checked = checked
 			)
 			svg
 				use.checkbox(xlink:href="#checkbox-30")

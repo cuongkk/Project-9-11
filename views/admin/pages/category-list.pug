@@ -77,11 +77,11 @@ block main
 								td.text-left
 									if (item.createdByFullName)
 										div #{item.createdByFullName}
-										div.inner-small #{item.createdAtFormat}
+									div.inner-small #{item.createdAtFormat}
 								td.text-left
 									if (item.updatedByFullName)
 										div #{item.updatedByFullName}
-										div.inner-small #{item.updatedAtFormat}
+									div.inner-small #{item.updatedAtFormat}
 								td.text-left
 									.box-actions 
 										a(href=`/${pathAdmin}/category/edit/${item._id}` class="inner-edit")

@@ -1,4 +1,4 @@
-const { Tour } = require("../../models/tour.models");
+const { Tour } = require("../../models/tour.model");
 
 module.exports.cart = (req, res) => {
   res.render("client/pages/cart", {
