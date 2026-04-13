@@ -1,11 +1,9 @@
 import type { Request, Response } from "express";
 import * as userService from "./user.service";
+import { asyncHandler } from "../../utils/async-handler";
+import { sendSuccess } from "../../utils/response";
 
-export const list = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const data = await userService.list(req);
-    res.json({ code: "success", ...data });
-  } catch (error) {
-    res.json({ code: "error", message: "Lấy danh sách người dùng thất bại!" });
-  }
-};
+export const list = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await userService.list(req);
+  sendSuccess(res, "Lấy danh sách người dùng thành công!", data);
+});

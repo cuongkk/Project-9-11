@@ -3,8 +3,8 @@ import bcrypt from "bcryptjs";
 import moment from "moment";
 import slugify from "slugify";
 import Role from "../user/role.model";
-import AccountAdmin from "../auth/account-admin.model";
-import SettingWebsiteInfo from "./setting-website-info.model";
+import AccountAdmin from "../auth/account.model";
+import SettingWebsiteInfo from "./setting.model";
 import { AccountRequest } from "../../interfaces/request.interface";
 import { permissionList } from "../../configs/variable.config";
 

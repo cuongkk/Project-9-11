@@ -4,6 +4,20 @@ import Order from "./order.model";
 import City from "../city/city.model";
 import { paymentMethodList, paymentStatusList, statusList } from "../../configs/variable.config";
 
+const normalizeOrderItems = (items: any[] = []): any[] => {
+  return items.map((item) => {
+    const quantity = Number(item.quantity ?? 0) || Number(item.quantityAdult ?? 0) + Number(item.quantityChildren ?? 0) + Number(item.quantityBaby ?? 0);
+
+    const unitPrice = Number(item.unitPrice ?? 0) || Number(item.priceNew ?? 0) || Number(item.priceNewAdult ?? 0) || Number(item.priceAdult ?? 0) || 0;
+
+    return {
+      ...item,
+      quantity,
+      unitPrice,
+    };
+  });
+};
+
 export const list = async (req: Request): Promise<{ orderList: any[] }> => {
   const orderList: any[] = await Order.find({
     deleted: false,
@@ -20,6 +34,7 @@ export const list = async (req: Request): Promise<{ orderList: any[] }> => {
 
     (orderDetail as any).createdAtTime = moment((orderDetail as any).createdAt).format("HH:mm");
     (orderDetail as any).createdAtDate = moment((orderDetail as any).createdAt).format("DD/MM/YYYY");
+    (orderDetail as any).items = normalizeOrderItems((orderDetail as any).items || []);
   }
 
   return { orderList };
@@ -38,14 +53,16 @@ export const edit = async (
     }
 
     orderDetail.createdAtFormat = moment(orderDetail.createdAt).format("HH:mm - DD/MM/YYYY");
+    orderDetail.items = normalizeOrderItems(orderDetail.items || []);
+
+    const cityIds = [...new Set((orderDetail.items || []).map((i: any) => i.locationFrom).filter(Boolean))];
+    const cities = await City.find({ _id: { $in: cityIds } }).select("name");
+    const cityMap = new Map<string, any>(cities.map((c: any) => [c._id.toString(), c]));
 
     for (const item of orderDetail.items || []) {
       item.departureDateFormat = moment(item.departureDate).format("DD/MM/YYYY");
-
-      const city = await City.findOne({ _id: item.locationFrom });
-      if (city) {
-        item.locationFromName = (city as any).name;
-      }
+      const city = cityMap.get(String(item.locationFrom));
+      if (city) item.locationFromName = (city as any).name;
     }
 
     return { orderDetail, paymentMethodList, paymentStatusList, statusList };

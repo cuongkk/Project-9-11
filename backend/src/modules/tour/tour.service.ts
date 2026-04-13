@@ -4,32 +4,41 @@ import Category from "../category/category.model";
 import City from "../city/city.model";
 import { buildCategoryTree } from "../category/category.helper";
 import Tour from "./tour.model";
-import AccountAdmin from "../auth/account-admin.model";
 import { pagination } from "../../utils/pagination.helper";
 import { AccountRequest } from "../../interfaces/request.interface";
+
+const toInt = (value: unknown, fallback = 0): number => {
+  if (value === undefined || value === null || value === "") return fallback;
+  const parsed = parseInt(String(value), 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
+
+const normalizeTourPricing = (body: any): void => {
+  const basePrice = toInt(body.price, toInt(body.priceAdult, 0));
+  const salePrice = toInt(body.priceNew, toInt(body.priceNewAdult, basePrice));
+  const stock = toInt(body.stock, toInt(body.stockAdult, 0));
+
+  body.price = basePrice;
+  body.priceNew = salePrice;
+  body.stock = stock;
+};
 
 export const list = async (req: Request): Promise<{ tourList: any[]; pagination: any }> => {
   const find: any = { deleted: false };
 
   const pageInfo = await pagination(Tour, find, req as any);
 
-  const tourList: any[] = await Tour.find(find).sort({ position: "desc" }).limit(pageInfo.limitItems).skip(pageInfo.skip);
+  const tourList: any[] = await Tour.find(find).sort({ createdAt: "desc" }).limit(pageInfo.limitItems).skip(pageInfo.skip);
 
   for (const item of tourList) {
     if ((item as any).createdBy) {
-      const infoAccount = await AccountAdmin.findOne({ _id: (item as any).createdBy });
-      if (infoAccount) {
-        (item as any).createdByFullName = infoAccount.fullName;
-        (item as any).createdAtFormat = moment((item as any).createdAt).format("HH:mm - DD/MM/YYYY");
-      }
+      (item as any).createdByFullName = "Admin";
+      (item as any).createdAtFormat = moment((item as any).createdAt).format("HH:mm - DD/MM/YYYY");
     }
 
     if ((item as any).updatedBy) {
-      const infoAccount = await AccountAdmin.findOne({ _id: (item as any).updatedBy });
-      if (infoAccount) {
-        (item as any).updatedByFullName = infoAccount.fullName;
-        (item as any).updatedAtFormat = moment((item as any).updatedAt).format("HH:mm - DD/MM/YYYY");
-      }
+      (item as any).updatedByFullName = "Admin";
+      (item as any).updatedAtFormat = moment((item as any).updatedAt).format("HH:mm - DD/MM/YYYY");
     }
   }
 
@@ -37,7 +46,7 @@ export const list = async (req: Request): Promise<{ tourList: any[]; pagination:
 };
 
 export const create = async (req: Request): Promise<{ categoryList: any[]; cityList: any[] }> => {
-  const categoryList = await Category.find({ deleted: false });
+  const categoryList = await Category.find({ deletedAt: { $exists: false } });
   const categoryTree = buildCategoryTree(categoryList as any[]);
 
   const cityList = await City.find({});
@@ -60,22 +69,7 @@ export const createPost = async (req: Request): Promise<{ code: string; message:
     anyReq.body.images = [];
   }
 
-  if (anyReq.body.position) {
-    anyReq.body.position = parseInt(anyReq.body.position, 10);
-  } else {
-    const record = await Tour.findOne({}).sort({ position: "desc" });
-    anyReq.body.position = record ? (record as any).position + 1 : 1;
-  }
-
-  anyReq.body.priceAdult = anyReq.body.priceAdult ? parseInt(anyReq.body.priceAdult, 10) : 0;
-  anyReq.body.priceChildren = anyReq.body.priceChildren ? parseInt(anyReq.body.priceChildren, 10) : 0;
-  anyReq.body.priceBaby = anyReq.body.priceBaby ? parseInt(anyReq.body.priceBaby, 10) : 0;
-  anyReq.body.priceNewAdult = anyReq.body.priceNewAdult ? parseInt(anyReq.body.priceNewAdult, 10) : anyReq.body.priceAdult;
-  anyReq.body.priceNewChildren = anyReq.body.priceNewChildren ? parseInt(anyReq.body.priceNewChildren, 10) : anyReq.body.priceChildren;
-  anyReq.body.priceNewBaby = anyReq.body.priceNewBaby ? parseInt(anyReq.body.priceNewBaby, 10) : anyReq.body.priceBaby;
-  anyReq.body.stockAdult = anyReq.body.stockAdult ? parseInt(anyReq.body.stockAdult, 10) : 0;
-  anyReq.body.stockChildren = anyReq.body.stockChildren ? parseInt(anyReq.body.stockChildren, 10) : 0;
-  anyReq.body.stockBaby = anyReq.body.stockBaby ? parseInt(anyReq.body.stockBaby, 10) : 0;
+  normalizeTourPricing(anyReq.body);
   anyReq.body.locations = anyReq.body.locations ? JSON.parse(anyReq.body.locations) : [];
   anyReq.body.departureDate = anyReq.body.departureDate ? new Date(anyReq.body.departureDate) : null;
   anyReq.body.endDate = anyReq.body.endDate ? new Date(anyReq.body.endDate) : null;
@@ -108,19 +102,13 @@ export const trash = async (req: Request): Promise<{ tourList: any[] }> => {
 
   for (const item of tourList) {
     if ((item as any).createdBy) {
-      const infoAccount = await AccountAdmin.findOne({ _id: (item as any).createdBy });
-      if (infoAccount) {
-        (item as any).createdByFullName = infoAccount.fullName;
-        (item as any).createdAtFormat = moment((item as any).createdAt).format("HH:mm - DD/MM/YYYY");
-      }
+      (item as any).createdByFullName = "Admin";
+      (item as any).createdAtFormat = moment((item as any).createdAt).format("HH:mm - DD/MM/YYYY");
     }
 
     if ((item as any).deletedBy) {
-      const infoAccount = await AccountAdmin.findOne({ _id: (item as any).deletedBy });
-      if (infoAccount) {
-        (item as any).deletedByFullName = infoAccount.fullName;
-        (item as any).deletedAtFormat = moment((item as any).deletedAt).format("HH:mm - DD/MM/YYYY");
-      }
+      (item as any).deletedByFullName = "Admin";
+      (item as any).deletedAtFormat = moment((item as any).deletedAt).format("HH:mm - DD/MM/YYYY");
     }
   }
 
@@ -141,7 +129,7 @@ export const edit = async (req: Request): Promise<{ categoryList: any[]; tourDet
       tourDetail.departureDateFormat = moment(tourDetail.departureDate).format("YYYY-MM-DD");
     }
 
-    const categoryList = await Category.find({ deleted: false });
+    const categoryList = await Category.find({ deletedAt: { $exists: false } });
     const categoryTree = buildCategoryTree(categoryList as any[]);
     const cityList = await City.find({});
     return { categoryList: categoryTree, tourDetail, cityList };
@@ -168,31 +156,17 @@ export const editPatch = async (req: Request): Promise<{ code: string; message: 
     if (anyReq.files?.avatar?.[0]) {
       anyReq.body.avatar = anyReq.files.avatar[0].path;
     } else {
-      anyReq.body.avatar = "";
+      anyReq.body.avatar = tourDetail.avatar || "";
     }
 
     if (anyReq.files?.images?.length) {
-      anyReq.body.images = anyReq.files.images.map((item: any) => item.path);
+      const uploadedImages = anyReq.files.images.map((item: any) => item.path);
+      anyReq.body.images = [...(tourDetail.images || []), ...uploadedImages];
     } else {
-      anyReq.body.images = [];
+      anyReq.body.images = tourDetail.images || [];
     }
 
-    if (anyReq.body.position) {
-      anyReq.body.position = parseInt(anyReq.body.position, 10);
-    } else {
-      const record = await Tour.findOne({}).sort({ position: "desc" });
-      anyReq.body.position = record ? (record as any).position + 1 : 1;
-    }
-
-    anyReq.body.priceAdult = anyReq.body.priceAdult ? parseInt(anyReq.body.priceAdult, 10) : 0;
-    anyReq.body.priceChildren = anyReq.body.priceChildren ? parseInt(anyReq.body.priceChildren, 10) : 0;
-    anyReq.body.priceBaby = anyReq.body.priceBaby ? parseInt(anyReq.body.priceBaby, 10) : 0;
-    anyReq.body.priceNewAdult = anyReq.body.priceNewAdult ? parseInt(anyReq.body.priceNewAdult, 10) : anyReq.body.priceAdult;
-    anyReq.body.priceNewChildren = anyReq.body.priceNewChildren ? parseInt(anyReq.body.priceNewChildren, 10) : anyReq.body.priceChildren;
-    anyReq.body.priceNewBaby = anyReq.body.priceNewBaby ? parseInt(anyReq.body.priceNewBaby, 10) : anyReq.body.priceBaby;
-    anyReq.body.stockAdult = anyReq.body.stockAdult ? parseInt(anyReq.body.stockAdult, 10) : 0;
-    anyReq.body.stockChildren = anyReq.body.stockChildren ? parseInt(anyReq.body.stockChildren, 10) : 0;
-    anyReq.body.stockBaby = anyReq.body.stockBaby ? parseInt(anyReq.body.stockBaby, 10) : 0;
+    normalizeTourPricing(anyReq.body);
     anyReq.body.locations = anyReq.body.locations ? JSON.parse(anyReq.body.locations) : [];
     anyReq.body.vehicle = anyReq.body.vehicle || tourDetail.vehicle || "";
     anyReq.body.departureDate = anyReq.body.departureDate ? new Date(anyReq.body.departureDate) : tourDetail.departureDate || null;

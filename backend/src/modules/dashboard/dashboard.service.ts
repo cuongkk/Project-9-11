@@ -1,6 +1,9 @@
 import type { Request } from "express";
-import AccountAdmin from "../auth/account-admin.model";
+import AccountAdmin from "../auth/account.model";
 import Order from "../order/order.model";
+import SettingWebsiteInfo from "../setting/setting.model";
+import Category from "../category/category.model";
+import { buildCategoryTree } from "../category/category.helper";
 
 export const dashboard = async (
   req: Request,
@@ -9,62 +12,90 @@ export const dashboard = async (
   totalOrder: number;
   totalRevenue: number;
 }> => {
-  const overview = {
-    totalAdmin: 0,
-    totalOrder: 0,
-    totalRevenue: 0,
+  const [totalAdmin, orderAgg] = await Promise.all([
+    AccountAdmin.countDocuments({ deleted: false }),
+    Order.aggregate([
+      { $match: { deleted: false } },
+      {
+        $group: {
+          _id: null,
+          totalOrder: { $sum: 1 },
+          totalRevenue: { $sum: { $ifNull: ["$total", 0] } },
+        },
+      },
+    ]),
+  ]);
+
+  const summary = orderAgg?.[0] || { totalOrder: 0, totalRevenue: 0 };
+
+  return {
+    totalAdmin,
+    totalOrder: summary.totalOrder,
+    totalRevenue: summary.totalRevenue,
   };
+};
 
-  overview.totalAdmin = await AccountAdmin.countDocuments({ deleted: false });
+export const info = async (req: Request): Promise<{ settingWebsiteInfo: any; categoryList: any[] }> => {
+  const settingRecord = await SettingWebsiteInfo.findOne({});
 
-  const orderList = await Order.find({ deleted: false });
-  overview.totalOrder = orderList.length;
-  overview.totalRevenue = orderList.reduce((total, item) => total + (item as any).total, 0);
+  const settingWebsiteInfo =
+    settingRecord ||
+    ({
+      websiteName: "",
+      phone: "",
+      email: "",
+      address: "",
+      logo: "",
+      favicon: "",
+    } as any);
 
-  return overview;
+  const categories = await Category.find({ deletedAt: { $exists: false }, status: "active" }).sort({ position: "asc" });
+  const categoryTree = buildCategoryTree(categories as any[]);
+
+  return {
+    settingWebsiteInfo,
+    categoryList: categoryTree,
+  };
 };
 
 export const revenueChartPost = async (req: Request): Promise<{ dataMonthCurrent: number[]; dataMonthPrevious: number[] }> => {
   const { currentMonth, currentYear, previousMonth, previousYear, arrayDay } = req.body as any;
 
-  const ordersCurrentMonth = await Order.find({
-    deleted: false,
-    createdAt: {
-      $gte: new Date(currentYear, currentMonth - 1, 1),
-      $lt: new Date(currentYear, currentMonth, 1),
-    },
-  });
+  const [currentAgg, previousAgg] = await Promise.all([
+    Order.aggregate([
+      {
+        $match: {
+          deleted: false,
+          createdAt: {
+            $gte: new Date(currentYear, currentMonth - 1, 1),
+            $lt: new Date(currentYear, currentMonth, 1),
+          },
+        },
+      },
+      { $project: { day: { $dayOfMonth: "$createdAt" }, total: { $ifNull: ["$total", 0] } } },
+      { $group: { _id: "$day", revenue: { $sum: "$total" } } },
+    ]),
+    Order.aggregate([
+      {
+        $match: {
+          deleted: false,
+          createdAt: {
+            $gte: new Date(previousYear, previousMonth - 1, 1),
+            $lt: new Date(previousYear, previousMonth, 1),
+          },
+        },
+      },
+      { $project: { day: { $dayOfMonth: "$createdAt" }, total: { $ifNull: ["$total", 0] } } },
+      { $group: { _id: "$day", revenue: { $sum: "$total" } } },
+    ]),
+  ]);
 
-  const ordersPreviousMonth = await Order.find({
-    deleted: false,
-    createdAt: {
-      $gte: new Date(previousYear, previousMonth - 1, 1),
-      $lt: new Date(previousYear, previousMonth, 1),
-    },
-  });
+  const currentMap = new Map<number, number>(currentAgg.map((r: any) => [Number(r._id), Number(r.revenue || 0)]));
+  const previousMap = new Map<number, number>(previousAgg.map((r: any) => [Number(r._id), Number(r.revenue || 0)]));
 
-  const dataMonthCurrent: number[] = [];
-  const dataMonthPrevious: number[] = [];
-
-  for (const day of arrayDay as number[]) {
-    let revenueCurrent = 0;
-    for (const order of ordersCurrentMonth) {
-      const orderDate = new Date((order as any).createdAt).getDate();
-      if (orderDate === day) {
-        revenueCurrent += (order as any).total;
-      }
-    }
-    dataMonthCurrent.push(revenueCurrent);
-
-    let revenuePrevious = 0;
-    for (const order of ordersPreviousMonth) {
-      const orderDate = new Date((order as any).createdAt).getDate();
-      if (orderDate === day) {
-        revenuePrevious += (order as any).total;
-      }
-    }
-    dataMonthPrevious.push(revenuePrevious);
-  }
+  const days = Array.isArray(arrayDay) ? (arrayDay as number[]) : [];
+  const dataMonthCurrent = days.map((d) => currentMap.get(Number(d)) || 0);
+  const dataMonthPrevious = days.map((d) => previousMap.get(Number(d)) || 0);
 
   return { dataMonthCurrent, dataMonthPrevious };
 };

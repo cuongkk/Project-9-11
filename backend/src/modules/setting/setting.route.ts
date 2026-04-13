@@ -2,6 +2,8 @@ import { Router } from "express";
 import multer from "multer";
 import { storage } from "../../utils/cloudinary.helper";
 import * as settingController from "./setting.controller";
+import { validate } from "../../middlewares/validate.middleware";
+import { objectIdParamSchema } from "../../validates/common.validation";
 
 const router = Router();
 
@@ -32,9 +34,9 @@ router.get("/account-admin/create", settingController.accountAdminCreate);
 
 router.post("/account-admin/create", upload.single("avatar"), settingController.accountAdminCreatePost);
 
-router.get("/account-admin/edit/:id", settingController.accountAdminEdit);
+router.get("/account-admin/edit/:id", validate({ params: objectIdParamSchema }), settingController.accountAdminEdit);
 
-router.patch("/account-admin/edit/:id", upload.single("avatar"), settingController.accountAdminEditPatch);
+router.patch("/account-admin/edit/:id", validate({ params: objectIdParamSchema }), upload.single("avatar"), settingController.accountAdminEditPatch);
 
 router.get("/role/list", settingController.roleList);
 
@@ -42,8 +44,8 @@ router.get("/role/create", settingController.roleCreate);
 
 router.post("/role/create", settingController.roleCreatePost);
 
-router.get("/role/edit/:id", settingController.roleEdit);
+router.get("/role/edit/:id", validate({ params: objectIdParamSchema }), settingController.roleEdit);
 
-router.patch("/role/edit/:id", settingController.roleEditPatch);
+router.patch("/role/edit/:id", validate({ params: objectIdParamSchema }), settingController.roleEditPatch);
 
 export default router;

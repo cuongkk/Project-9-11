@@ -7,15 +7,9 @@ export interface ITour extends Document {
   status?: string;
   avatar?: string;
   images?: string[];
-  priceAdult?: number;
-  priceChildren?: number;
-  priceBaby?: number;
-  priceNewAdult?: number;
-  priceNewChildren?: number;
-  priceNewBaby?: number;
-  stockAdult?: number;
-  stockChildren?: number;
-  stockBaby?: number;
+  price?: number;
+  priceNew?: number;
+  stock?: number;
   locations?: any[];
   time?: string;
   departureDate?: Date;
@@ -38,15 +32,9 @@ const schema = new Schema<ITour>(
     status: { type: String },
     avatar: { type: String },
     images: { type: [String], default: [] },
-    priceAdult: { type: Number },
-    priceChildren: { type: Number },
-    priceBaby: { type: Number },
-    priceNewAdult: { type: Number },
-    priceNewChildren: { type: Number },
-    priceNewBaby: { type: Number },
-    stockAdult: { type: Number },
-    stockChildren: { type: Number },
-    stockBaby: { type: Number },
+    price: { type: Number },
+    priceNew: { type: Number },
+    stock: { type: Number },
     locations: { type: [Schema.Types.Mixed], default: [] },
     time: { type: String },
     departureDate: { type: Date },

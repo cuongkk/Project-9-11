@@ -17,6 +17,8 @@ export interface CartItemOutput extends CartItemInput {
   slug?: string;
   departureDate: string;
   locationFromName?: string;
+  priceNew?: number;
+  stock?: number;
   priceNewAdult?: number;
   priceNewChildren?: number;
   priceNewBaby?: number;
@@ -26,20 +28,23 @@ export interface CartItemOutput extends CartItemInput {
 }
 
 export async function buildCartDetails(cart: CartItemInput[]): Promise<CartItemOutput[]> {
-  const cartDetails: CartItemOutput[] = [];
+  const tourIds = [...new Set(cart.map((c) => c.tourId).filter(Boolean))];
+  const cityIds = [...new Set(cart.map((c) => c.locationFrom).filter(Boolean))];
 
-  for (const item of cart) {
-    const tourDetail = await Tour.findOne({
-      _id: item.tourId,
-      status: "active",
-      deleted: false,
-    });
+  const [tours, cities] = await Promise.all([
+    Tour.find({ _id: { $in: tourIds }, status: "active", deleted: false }).select("avatar name slug priceNew stock priceNewAdult priceNewChildren priceNewBaby stockAdult stockChildren stockBaby"),
+    City.find({ _id: { $in: cityIds } }).select("name"),
+  ]);
 
-    const cityDetail = await City.findOne({
-      _id: item.locationFrom,
-    });
+  const tourMap = new Map<string, any>(tours.map((t: any) => [t._id.toString(), t]));
+  const cityMap = new Map<string, any>(cities.map((c: any) => [c._id.toString(), c]));
 
-    if (tourDetail && cityDetail) {
+  return cart
+    .map((item) => {
+      const tourDetail = tourMap.get(String(item.tourId));
+      const cityDetail = cityMap.get(String(item.locationFrom));
+      if (!tourDetail || !cityDetail) return null;
+
       const cartItem: CartItemOutput = {
         ...item,
         avatar: tourDetail.avatar,
@@ -47,17 +52,16 @@ export async function buildCartDetails(cart: CartItemInput[]): Promise<CartItemO
         slug: tourDetail.slug,
         departureDate: moment(item.departureDate).format("DD/MM/YYYY"),
         locationFromName: cityDetail.name || "",
-        priceNewAdult: tourDetail.priceNewAdult,
-        priceNewChildren: tourDetail.priceNewChildren,
-        priceNewBaby: tourDetail.priceNewBaby,
-        stockAdult: tourDetail.stockAdult,
-        stockChildren: tourDetail.stockChildren,
-        stockBaby: tourDetail.stockBaby,
+        priceNew: tourDetail.priceNew ?? tourDetail.priceNewAdult,
+        stock: tourDetail.stock ?? tourDetail.stockAdult,
+        priceNewAdult: tourDetail.priceNewAdult ?? tourDetail.priceNew,
+        priceNewChildren: tourDetail.priceNewChildren ?? tourDetail.priceNew,
+        priceNewBaby: tourDetail.priceNewBaby ?? tourDetail.priceNew,
+        stockAdult: tourDetail.stockAdult ?? tourDetail.stock,
+        stockChildren: tourDetail.stockChildren ?? tourDetail.stock,
+        stockBaby: tourDetail.stockBaby ?? tourDetail.stock,
       };
-
-      cartDetails.push(cartItem);
-    }
-  }
-
-  return cartDetails;
+      return cartItem;
+    })
+    .filter(Boolean) as CartItemOutput[];
 }

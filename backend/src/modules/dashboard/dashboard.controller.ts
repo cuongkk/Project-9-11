@@ -1,24 +1,19 @@
 import type { Request, Response } from "express";
 import * as dashboardService from "./dashboard.service";
+import { asyncHandler } from "../../utils/async-handler";
+import { sendSuccess } from "../../utils/response";
 
-export const dashboard = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const overview = await dashboardService.dashboard(req);
-    res.json({
-      code: "success",
-      message: "Lấy dữ liệu dashboard thành công!",
-      overview,
-    });
-  } catch (error) {
-    res.json({ code: "error", message: "Lấy dữ liệu dashboard thất bại!" });
-  }
-};
+export const dashboard = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const overview = await dashboardService.dashboard(req);
+  sendSuccess(res, "Lấy dữ liệu dashboard thành công!", { overview });
+});
 
-export const revenueChartPost = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const data = await dashboardService.revenueChartPost(req);
-    res.json({ code: "success", ...data });
-  } catch (error) {
-    res.json({ code: "error", message: "Lấy dữ liệu biểu đồ thất bại!" });
-  }
-};
+export const info = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await dashboardService.info(req);
+  sendSuccess(res, "Lấy thông tin thành công!", data);
+});
+
+export const revenueChartPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await dashboardService.revenueChartPost(req);
+  sendSuccess(res, "Lấy dữ liệu biểu đồ thành công!", data);
+});

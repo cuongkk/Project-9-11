@@ -6,7 +6,7 @@ export interface PaginationResult {
 }
 
 export const pagination = async (model: any, find: any, req: any): Promise<PaginationResult> => {
-  const limitItems = 2;
+  const limitItems = 4;
   let page = 1;
   if (req.query?.page) {
     page = parseInt(req.query.page as string, 10);

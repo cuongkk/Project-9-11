@@ -7,11 +7,14 @@ export interface CategoryTreeNode {
   children: CategoryTreeNode[];
 }
 
-export const buildCategoryTree = (categories: any[], parentId = ""): CategoryTreeNode[] => {
+export const buildCategoryTree = (categories: any[], parentId?: string): CategoryTreeNode[] => {
   const tree: CategoryTreeNode[] = [];
 
   for (const item of categories) {
-    if ((item as any).parent == parentId) {
+    const itemParent = (item as any).parent ?? "";
+    const currentParentId = parentId ?? "";
+
+    if (itemParent == currentParentId) {
       const children = buildCategoryTree(categories, (item as any).id as string);
 
       tree.push({
@@ -31,7 +34,7 @@ export const getCategorySubId = async (parentId = ""): Promise<string[]> => {
 
   const children = await Category.find({
     parent: parentId,
-    deleted: false,
+    deletedAt: { $exists: false },
     status: "active",
   });
 

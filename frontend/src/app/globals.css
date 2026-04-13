@@ -1,26 +1,343 @@
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+
+@config "../../tailwind.config.ts";
 @import "tailwindcss";
+@import "swiper/css";
+@import "swiper/css/navigation";
+@import "swiper/css/pagination";
+@import "photoswipe/dist/photoswipe.css";
+@import "filepond/dist/filepond.min.css";
+@import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Font mặc định */
+body {
+  @apply bg-background text-on-surface font-body;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Reusable components */
+.btn-primary {
+  @apply bg-primary text-on-primary px-4 py-2 rounded-lg hover:opacity-90 transition;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.card {
+  @apply bg-surface p-4 rounded-lg shadow-sm;
+}
+
+@theme {
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+  --breakpoint-2xl: 1200px;
+}
+
+* {
+  font-family: "Lexend", sans-serif;
+}
+
+svg {
+  display: inline-block;
+}
+
+/* Contain */
+.contain {
+  width: 1184px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1199.98px) {
+  /* Máy tính cỡ nhỏ */
+  .contain {
+    width: 960px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (max-width: 991.98px) {
+  /* Màn hình máy tính bảng cỡ lớn */
+  .contain {
+    width: 720px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  /* Màn hình máy tính bảng cỡ nhỏ */
+  .contain {
+    width: 540px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  /* Màn hình điện thoại */
+  .contain {
+    width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+/* End Contain */
+
+select,
+input,
+button,
+textarea {
+  outline: none;
+}
+
+/*filepond*/
+
+.avatar-pond .filepond--root {
+  font-family: inherit;
+  margin-bottom: 0;
+}
+
+.avatar-pond .filepond--drop-area {
+  cursor: pointer;
+}
+
+.avatar-pond .filepond--panel-root {
+  border-radius: 16px;
+  border: 2px dashed #d1d5db;
+  background: #f9fafb;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.avatar-pond .filepond--root:hover .filepond--panel-root,
+.avatar-pond .filepond--root.filepond--droppable .filepond--panel-root {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.avatar-pond .filepond--label-action {
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.avatar-pond .filepond--label-idle {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Preview to lớn, rõ ràng */
+.avatar-pond .filepond--image-preview-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.avatar-pond .filepond--image-preview {
+  background: #000;
+}
+
+.avatar-pond .filepond--item-panel {
+  border-radius: 12px;
+  background: #f3f4f6;
+}
+
+.avatar-pond .filepond--file-action-button {
+  cursor: pointer;
+}
+
+.avatar-pond .filepond--progress-indicator {
+  color: #6366f1;
+}
+
+.avatar-pond .filepond--image-preview canvas {
+  object-fit: cover;
+  width: 100% !important;
+}
+
+.avatar-pond .filepond--item {
+  height: 256px !important;
+}
+
+.image-upload-slider {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px dashed #d1d5db;
+  background: #f9fafb;
+}
+
+/* Drop zone */
+.upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 256px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+  gap: 8px;
+}
+
+.upload-dropzone:hover {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.upload-dropzone p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.upload-dropzone p span {
+  color: #6366f1;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.upload-dropzone .sub {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Slider */
+.slider-wrapper {
+  border: none;
+}
+
+.slide-main {
+  position: relative;
+  height: 256px;
+  background: #111;
+  overflow: hidden;
+}
+
+.slide-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.btn-remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+.btn-remove:hover {
+  background: rgba(220, 38, 38, 0.8);
+}
+
+.btn-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+.btn-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+.btn-nav.left {
+  left: 10px;
+}
+.btn-nav.right {
+  right: 10px;
+}
+
+.slide-counter {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+/* Thumbnails */
+.thumb-strip {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: #f3f4f6;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.thumb.active {
+  border-color: #6366f1;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb.add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  border: 2px dashed #d1d5db;
+}
+
+.thumb.add-btn:hover {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+/*Header */
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-style: normal;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+.primary-gradient-btn {
+  background: linear-gradient(135deg, #006b11 0%, #6cf967 100%);
+}
+.hero-clip-path {
+  clip-path: polygon(10% 0, 100% 0%, 100% 100%, 0% 100%);
 }

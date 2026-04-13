@@ -1,22 +1,23 @@
 import { Router } from "express";
-import multer from "multer";
 import * as categoryController from "./category.controller";
-import { storage } from "../../utils/cloudinary.helper";
+import { validate } from "../../middlewares/validate.middleware";
+import { objectIdParamSchema } from "../../validates/common.validation";
+import { changeMultiBodySchema, deleteCodeBodySchema } from "../../validates/module.validation";
 
 const router = Router();
-
-const upload = multer({ storage: storage });
 
 router.get("/list", categoryController.list);
 
 router.get("/create", categoryController.create);
 
-router.post("/create", upload.single("avatar"), categoryController.createPost);
+router.post("/create", categoryController.createPost);
 
-router.get("/edit/:id", categoryController.edit);
+router.get("/edit/:id", validate({ params: objectIdParamSchema }), categoryController.edit);
 
-router.patch("/edit/:id", upload.single("avatar"), categoryController.editPatch);
+router.patch("/edit/:id", validate({ params: objectIdParamSchema }), categoryController.editPatch);
 
-router.patch("/delete/:id", categoryController.deletePatch);
+router.patch("/delete/:id", validate({ params: objectIdParamSchema, body: deleteCodeBodySchema }), categoryController.deletePatch);
+
+router.patch("/change-multi", validate({ body: changeMultiBodySchema }), categoryController.changeMultiPatch);
 
 export default router;

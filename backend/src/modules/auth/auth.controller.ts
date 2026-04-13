@@ -1,88 +1,95 @@
 import { Request, Response } from "express";
 import * as authService from "./auth.service";
+import { asyncHandler } from "../../utils/async-handler";
+import { sendSuccess } from "../../utils/response";
+
+const getCookieOptions = (maxAge: number) => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  maxAge,
+});
 
 export const login = (req: Request, res: Response): void => {
-  res.json({
-    result: "success",
-    message: "Trang đăng nhập (API)",
-  });
+  sendSuccess(res, "Trang đăng nhập (API)");
 };
 
-export const loginPost = async (req: Request, res: Response): Promise<void> => {
-  const result = await authService.login(req);
+export const loginPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.login(req);
 
-  if (result.token) {
-    res.cookie("token", result.token, {
-      maxAge: result.rememberPassword ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      sameSite: "strict",
-    });
-  }
+  const rememberPassword = Boolean((req.body as { rememberPassword?: boolean }).rememberPassword);
 
-  res.json(result);
-};
+  res.cookie("accessToken", data.accessToken, getCookieOptions(15 * 60 * 1000));
+  res.cookie("refreshToken", data.refreshToken, getCookieOptions(rememberPassword ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000));
+
+  sendSuccess(res, "Đăng nhập thành công", data);
+});
 
 export const register = (req: Request, res: Response): void => {
-  res.json({
-    result: "success",
-    message: "Trang đăng ký (API)",
-  });
+  sendSuccess(res, "Trang đăng ký (API)");
 };
 
-export const registerPost = async (req: Request, res: Response): Promise<void> => {
-  const result = await authService.register(req);
-  res.json(result);
-};
+export const registerPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.register(req);
+  sendSuccess(res, "Đăng ký thành công", data, 201);
+});
 
 export const forgotPassword = (req: Request, res: Response): void => {
-  res.json({
-    result: "success",
-    message: "Trang quên mật khẩu (API)",
-  });
+  sendSuccess(res, "Trang quên mật khẩu (API)");
 };
 
-export const forgotPasswordPost = async (req: Request, res: Response): Promise<void> => {
-  const result = await authService.forgotPassword(req);
-  res.json(result);
-};
+export const forgotPasswordPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.forgotPassword(req);
+  sendSuccess(res, "Đã gửi mã OTP đến email của bạn", data);
+});
 
 export const otpPassword = (req: Request, res: Response): void => {
-  res.json({
-    result: "success",
-    message: "Trang OTP mật khẩu (API)",
-  });
+  sendSuccess(res, "Trang OTP mật khẩu (API)");
 };
 
-export const otpPasswordPost = async (req: Request, res: Response): Promise<void> => {
-  const result = await authService.verifyOtp(req);
+export const otpPasswordPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.verifyOtp(req);
 
-  if (result.token) {
-    res.cookie("token", result.token, {
-      maxAge: 60 * 60 * 1000,
-      httpOnly: true,
-      sameSite: "strict",
-    });
-  }
+  // Temporary auth for reset password flow.
+  res.cookie("accessToken", data.token, getCookieOptions(10 * 60 * 1000));
 
-  res.json(result);
-};
+  sendSuccess(res, "Xác thực OTP thành công", data);
+});
 
 export const resetPassword = (req: Request, res: Response): void => {
-  res.json({
-    result: "success",
-    message: "Trang đặt lại mật khẩu (API)",
-  });
+  sendSuccess(res, "Trang đặt lại mật khẩu (API)");
 };
 
-export const resetPasswordPost = async (req: Request, res: Response): Promise<void> => {
-  const result = await authService.resetPassword(req as any);
-  res.json(result);
-};
+export const resetPasswordPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.resetPassword(req as any);
+  sendSuccess(res, "Đặt lại mật khẩu thành công", data);
+});
 
 export const logout = (req: Request, res: Response): void => {
-  res.clearCookie("token");
-  res.json({
-    result: "success",
-    message: "Đăng xuất thành công",
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
   });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+
+  sendSuccess(res, "Đăng xuất thành công");
 };
+
+export const getMe = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.getMe(req);
+  sendSuccess(res, "Lấy thông tin người dùng thành công", data);
+});
+
+export const refreshPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.refresh(req);
+
+  res.cookie("accessToken", data.accessToken, getCookieOptions(15 * 60 * 1000));
+  res.cookie("refreshToken", data.refreshToken, getCookieOptions(30 * 24 * 60 * 60 * 1000));
+
+  sendSuccess(res, "Làm mới token thành công", data);
+});

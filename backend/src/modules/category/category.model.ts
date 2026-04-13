@@ -5,13 +5,8 @@ export interface ICategory extends Document {
   parent?: string;
   position?: number;
   status?: string;
-  avatar?: string;
   description?: string;
-  createdBy?: string;
-  updatedBy?: string;
   slug?: string;
-  deleted: boolean;
-  deletedBy?: string;
   deletedAt?: Date;
 }
 
@@ -21,13 +16,8 @@ const schema = new Schema<ICategory>(
     parent: { type: String },
     position: { type: Number },
     status: { type: String },
-    avatar: { type: String },
     description: { type: String },
-    createdBy: { type: String },
-    updatedBy: { type: String },
     slug: { type: String, unique: true },
-    deleted: { type: Boolean, default: false },
-    deletedBy: { type: String },
     deletedAt: { type: Date },
   },
   {

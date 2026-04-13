@@ -1,160 +1,83 @@
 import type { Request, Response } from "express";
 import * as settingService from "./setting.service";
+import { asyncHandler } from "../../utils/async-handler";
+import { sendSuccess } from "../../utils/response";
+import { HttpError } from "../../middlewares/error.middleware";
 
-export const list = (req: Request, res: Response): void => {
-  settingService
-    .list(req)
-    .then((data) => res.json({ code: "success", ...data }))
-    .catch(() => res.json({ code: "error", message: "Lấy dữ liệu cài đặt thất bại!" }));
-};
+export const list = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await settingService.list(req);
+  sendSuccess(res, "Lấy dữ liệu cài đặt thành công!", data);
+});
 
-export const websiteInfo = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .websiteInfo(req)
-    .then((data) => {
-      res.json({ code: "success", message: "Lấy thông tin website thành công!", ...data });
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Lấy thông tin website thất bại!" });
-    });
-};
+export const websiteInfo = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await settingService.websiteInfo(req);
+  sendSuccess(res, "Lấy thông tin website thành công!", data);
+});
 
-export const websiteInfoPatch = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .websiteInfoPatch(req)
-    .then((result) => {
-      res.json(result);
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Cập nhật thông tin website thất bại!" });
-    });
-};
+export const websiteInfoPatch = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const result = await settingService.websiteInfoPatch(req);
+  if ((result as any).code === "error") throw new HttpError(400, (result as any).message || "Cập nhật thông tin website thất bại!");
+  sendSuccess(res, (result as any).message || "Cập nhật thành công!", result);
+});
 
-export const accountAdminList = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .accountAdminList(req)
-    .then((data) => {
-      res.json({ code: "success", message: "Lấy danh sách tài khoản quản trị thành công!", ...data });
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Lấy danh sách tài khoản quản trị thất bại!" });
-    });
-};
+export const accountAdminList = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await settingService.accountAdminList(req);
+  sendSuccess(res, "Lấy danh sách tài khoản quản trị thành công!", data);
+});
 
-export const accountAdminCreate = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .accountAdminCreate(req)
-    .then((data) => {
-      res.json({ code: "success", message: "Lấy dữ liệu tạo tài khoản quản trị thành công!", ...data });
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Lấy dữ liệu tạo tài khoản quản trị thất bại!" });
-    });
-};
+export const accountAdminCreate = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await settingService.accountAdminCreate(req);
+  sendSuccess(res, "Lấy dữ liệu tạo tài khoản quản trị thành công!", data);
+});
 
-export const accountAdminCreatePost = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .accountAdminCreatePost(req)
-    .then((result) => {
-      res.json(result);
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Tạo tài khoản quản trị thất bại!" });
-    });
-};
+export const accountAdminCreatePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const result = await settingService.accountAdminCreatePost(req);
+  if ((result as any).code === "error") throw new HttpError(400, (result as any).message || "Tạo tài khoản quản trị thất bại!");
+  sendSuccess(res, (result as any).message || "Đã tạo tài khoản quản trị!", result, 201);
+});
 
-export const accountAdminEdit = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .accountAdminEdit(req)
-    .then((data) => {
-      if ((data as any).code === "error") {
-        res.json(data);
-        return;
-      }
-      res.json({ code: "success", message: "Lấy dữ liệu chỉnh sửa tài khoản quản trị thành công!", ...data });
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Lấy dữ liệu chỉnh sửa tài khoản quản trị thất bại!" });
-    });
-};
+export const accountAdminEdit = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await settingService.accountAdminEdit(req);
+  if ((data as any).code === "error") throw new HttpError(404, (data as any).message || "Tài khoản không tồn tại!");
+  sendSuccess(res, "Lấy dữ liệu chỉnh sửa tài khoản quản trị thành công!", data);
+});
 
-export const accountAdminEditPatch = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .accountAdminEditPatch(req)
-    .then((result) => {
-      res.json(result);
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Cập nhật tài khoản quản trị thất bại!" });
-    });
-};
+export const accountAdminEditPatch = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const result = await settingService.accountAdminEditPatch(req);
+  if ((result as any).code === "error") throw new HttpError(400, (result as any).message || "Cập nhật tài khoản quản trị thất bại!");
+  sendSuccess(res, (result as any).message || "Đã cập nhật tài khoản quản trị!", result);
+});
 
-export const roleList = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .roleList(req)
-    .then((data) => {
-      res.json({ code: "success", message: "Lấy danh sách nhóm quyền thành công!", ...data });
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Lấy danh sách nhóm quyền thất bại!" });
-    });
-};
+export const roleList = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await settingService.roleList(req);
+  sendSuccess(res, "Lấy danh sách nhóm quyền thành công!", data);
+});
 
-export const roleCreate = (req: Request, res: Response): void => {
-  settingService
-    .roleCreate(req)
-    .then((data) => {
-      res.json({ code: "success", message: "Lấy dữ liệu tạo nhóm quyền thành công!", ...data });
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Lấy dữ liệu tạo nhóm quyền thất bại!" });
-    });
-};
+export const roleCreate = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await settingService.roleCreate(req);
+  sendSuccess(res, "Lấy dữ liệu tạo nhóm quyền thành công!", data);
+});
 
-export const roleCreatePost = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .roleCreatePost(req)
-    .then((result) => {
-      res.json(result);
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Tạo nhóm quyền thất bại!" });
-    });
-};
+export const roleCreatePost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const result = await settingService.roleCreatePost(req);
+  if ((result as any).code === "error") throw new HttpError(400, (result as any).message || "Tạo nhóm quyền thất bại!");
+  sendSuccess(res, (result as any).message || "Đã tạo nhóm quyền!", result, 201);
+});
 
-export const roleEdit = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .roleEdit(req)
-    .then((data) => {
-      if ((data as any).code === "error") {
-        res.json(data);
-        return;
-      }
-      res.json({ code: "success", message: "Lấy dữ liệu chỉnh sửa nhóm quyền thành công!", ...data });
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Lấy dữ liệu chỉnh sửa nhóm quyền thất bại!" });
-    });
-};
+export const roleEdit = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await settingService.roleEdit(req);
+  if ((data as any).code === "error") throw new HttpError(404, (data as any).message || "Nhóm quyền không tồn tại!");
+  sendSuccess(res, "Lấy dữ liệu chỉnh sửa nhóm quyền thành công!", data);
+});
 
-export const roleEditPatch = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .roleEditPatch(req)
-    .then((result) => {
-      res.json(result);
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Cập nhật nhóm quyền thất bại!" });
-    });
-};
+export const roleEditPatch = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const result = await settingService.roleEditPatch(req);
+  if ((result as any).code === "error") throw new HttpError(400, (result as any).message || "Cập nhật nhóm quyền thất bại!");
+  sendSuccess(res, (result as any).message || "Đã cập nhật nhóm quyền!", result);
+});
 
-export const roleDeletePatch = (req: Request, res: Response): Promise<void> => {
-  return settingService
-    .roleDeletePatch(req)
-    .then((result) => {
-      res.json(result);
-    })
-    .catch(() => {
-      res.json({ code: "error", message: "Xóa nhóm quyền thất bại!" });
-    });
-};
+export const roleDeletePatch = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const result = await settingService.roleDeletePatch(req);
+  if ((result as any).code === "error") throw new HttpError(400, (result as any).message || "Xóa nhóm quyền thất bại!");
+  sendSuccess(res, (result as any).message || "Đã xóa nhóm quyền!", result);
+});

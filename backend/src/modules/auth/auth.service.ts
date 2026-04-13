@@ -1,11 +1,12 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import slugify from "slugify";
-import AccountAdmin from "./account-admin.model";
+import AccountAdmin from "./account.model";
 import ForgotPassword from "./forgot-password.model";
 import { generateRandomNumber } from "../../utils/generate.helper";
 import { sendMail } from "../../utils/mail.helper";
 import { Request } from "express";
+import { newJti, signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from "./auth.tokens";
+import { HttpError } from "../../middlewares/error.middleware";
 
 export const login = async (req: Request) => {
   const { email, password, rememberPassword } = req.body as { email: string; password: string; rememberPassword?: boolean };
@@ -13,37 +14,45 @@ export const login = async (req: Request) => {
   const existAccount = await AccountAdmin.findOne({ email });
 
   if (!existAccount) {
-    return {
-      result: "error" as const,
-      message: "Email không tồn tại trong hệ thống",
-    };
+    throw new HttpError(401, "Email không tồn tại trong hệ thống");
   }
 
   const isPasswordValid = await bcrypt.compare(password, existAccount.password);
 
   if (!isPasswordValid) {
-    return {
-      result: "error" as const,
-      message: "Mật khẩu không đúng",
-    };
+    throw new HttpError(401, "Mật khẩu không đúng");
   }
 
   if (existAccount.status === "initial") {
-    return {
-      result: "error" as const,
-      message: "Tài khoản chưa được kích hoạt",
-    };
+    throw new HttpError(403, "Tài khoản chưa được kích hoạt");
   }
 
-  const token = jwt.sign({ _id: existAccount._id }, process.env.JWT_SECRET_KEY as string, {
-    expiresIn: rememberPassword ? "30d" : "7d",
-  });
+  const userId = existAccount._id.toString();
+  const userType = "admin" as const;
+
+  const accessToken = signAccessToken({ sub: userId, userType });
+
+  const jti = newJti();
+  const refreshToken = signRefreshToken({ sub: userId, userType, jti }, Boolean(rememberPassword));
+  const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+
+  await AccountAdmin.updateOne(
+    { _id: existAccount._id },
+    {
+      $set: {
+        refreshTokenHash,
+        refreshTokenJti: jti,
+      },
+    },
+  );
 
   return {
-    result: "success" as const,
-    message: "Đăng nhập thành công",
-    token,
-    rememberPassword: Boolean(rememberPassword),
+    accessToken,
+    refreshToken,
+    user: {
+      id: userId,
+      role: userType,
+    },
   };
 };
 
@@ -53,10 +62,7 @@ export const register = async (req: Request) => {
   const existAccount = await AccountAdmin.findOne({ email });
 
   if (existAccount) {
-    return {
-      result: "error" as const,
-      message: "Email đã tồn tại, vui lòng sử dụng email khác",
-    };
+    throw new HttpError(409, "Email đã tồn tại, vui lòng sử dụng email khác");
   }
 
   const data: any = {
@@ -76,8 +82,7 @@ export const register = async (req: Request) => {
   await newAccount.save();
 
   return {
-    result: "success" as const,
-    message: "Đăng ký thành công",
+    id: newAccount._id.toString(),
   };
 };
 
@@ -87,19 +92,13 @@ export const forgotPassword = async (req: Request) => {
   const existAccount = await AccountAdmin.findOne({ email, status: "active" });
 
   if (!existAccount) {
-    return {
-      result: "error" as const,
-      message: "Email không tồn tại trong hệ thống",
-    };
+    throw new HttpError(404, "Email không tồn tại trong hệ thống");
   }
 
   const existingOTP = await ForgotPassword.findOne({ email });
 
   if (existingOTP) {
-    return {
-      result: "error" as const,
-      message: "Mã OTP đã được gửi. Vui lòng kiểm tra email của bạn.",
-    };
+    throw new HttpError(429, "Mã OTP đã được gửi. Vui lòng kiểm tra email của bạn.");
   }
 
   const otpCode = generateRandomNumber(6);
@@ -118,8 +117,7 @@ export const forgotPassword = async (req: Request) => {
   await sendMail(email, subject, content);
 
   return {
-    result: "success" as const,
-    message: "Đã gửi mã OTP đến email của bạn",
+    ok: true,
   };
 };
 
@@ -129,10 +127,7 @@ export const verifyOtp = async (req: Request) => {
   const existRecord = await ForgotPassword.findOne({ email, otp });
 
   if (!existRecord) {
-    return {
-      result: "error" as const,
-      message: "Mã OTP không đúng hoặc đã hết hạn",
-    };
+    throw new HttpError(400, "Mã OTP không đúng hoặc đã hết hạn");
   }
 
   await ForgotPassword.deleteOne({ email, otp });
@@ -140,24 +135,13 @@ export const verifyOtp = async (req: Request) => {
   const existAccount = await AccountAdmin.findOne({ email });
 
   if (!existAccount) {
-    return {
-      result: "error" as const,
-      message: "Tài khoản không tồn tại",
-    };
+    throw new HttpError(404, "Tài khoản không tồn tại");
   }
 
-  const token = jwt.sign(
-    {
-      _id: existAccount._id,
-      email: existAccount.email,
-    },
-    process.env.JWT_SECRET_KEY as string,
-    { expiresIn: "1d" },
-  );
+  // Issue a short-lived access token to allow password reset flow.
+  const token = signAccessToken({ sub: existAccount._id.toString(), userType: "admin" });
 
   return {
-    result: "success" as const,
-    message: "Xác thực OTP thành công",
     token,
   };
 };
@@ -168,10 +152,7 @@ export const resetPassword = async (req: Request & { account?: any }) => {
   const account = (req as any).account;
 
   if (!account) {
-    return {
-      result: "error" as const,
-      message: "Token không hợp lệ hoặc đã hết hạn",
-    };
+    throw new HttpError(401, "Token không hợp lệ hoặc đã hết hạn");
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -179,7 +160,94 @@ export const resetPassword = async (req: Request & { account?: any }) => {
   await AccountAdmin.updateOne({ email: account.email }, { $set: { password: hashedPassword } });
 
   return {
-    result: "success" as const,
-    message: "Đặt lại mật khẩu thành công",
+    ok: true,
+  };
+};
+
+export const getMe = async (req: Request) => {
+  const accountFromMiddleware = (req as any).account;
+  if (accountFromMiddleware) {
+    return {
+      account: accountFromMiddleware,
+    };
+  }
+
+  const tokenFromHeader = req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : undefined;
+  const token = tokenFromHeader;
+
+  if (!token) {
+    throw new HttpError(401, "Không tìm thấy token xác thực");
+  }
+
+  try {
+    const decoded = verifyAccessToken(token);
+    const account = await AccountAdmin.findById(decoded.sub);
+
+    if (!account) {
+      throw new HttpError(404, "Tài khoản không tồn tại");
+    }
+
+    return {
+      account,
+    };
+  } catch (error) {
+    throw new HttpError(401, "Token không hợp lệ hoặc đã hết hạn");
+  }
+};
+
+export const refresh = async (req: Request) => {
+  const { refreshToken } = req.body as { refreshToken: string };
+
+  const decoded = verifyRefreshToken(refreshToken);
+
+  if (decoded.userType !== "admin") {
+    throw new HttpError(403, "Unsupported user type");
+  }
+
+  const account = await AccountAdmin.findOne({
+    _id: decoded.sub,
+    status: "active",
+  });
+
+  if (!account || account.deleted) {
+    throw new HttpError(401, "Tài khoản không hợp lệ hoặc đã bị khoá");
+  }
+
+  if (!account.refreshTokenHash || !account.refreshTokenJti) {
+    throw new HttpError(401, "Refresh token not recognized");
+  }
+
+  if (account.refreshTokenJti !== decoded.jti) {
+    throw new HttpError(401, "Refresh token has been rotated");
+  }
+
+  const matches = await bcrypt.compare(refreshToken, account.refreshTokenHash);
+  if (!matches) {
+    throw new HttpError(401, "Refresh token invalid");
+  }
+
+  // Rotate refresh token
+  const newRefreshJti = newJti();
+  const newRefreshToken = signRefreshToken(
+    { sub: account._id.toString(), userType: decoded.userType, jti: newRefreshJti },
+    true,
+  );
+  const newRefreshHash = await bcrypt.hash(newRefreshToken, 10);
+
+  await AccountAdmin.updateOne(
+    { _id: account._id },
+    {
+      $set: {
+        refreshTokenHash: newRefreshHash,
+        refreshTokenJti: newRefreshJti,
+      },
+    },
+  );
+
+  const newAccessToken = signAccessToken({ sub: account._id.toString(), userType: decoded.userType });
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
   };
 };
