@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { setReloadToast, showReloadToastIfAny } from "../../../../utils/toast";
 import { mutate } from "swr";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +16,7 @@ type LoginFormData = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isLogin, isAuthLoaded } = useAuth();
   const {
     register,
@@ -30,6 +31,8 @@ export default function LoginPage() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const redirectParam = searchParams.get("redirect") || "/admin";
+  const redirectPath = redirectParam.startsWith("/admin") ? redirectParam : "/admin";
 
   useEffect(() => {
     showReloadToastIfAny();
@@ -38,9 +41,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (!isAuthLoaded) return;
     if (isLogin) {
-      router.replace("/admin");
+      router.replace(redirectPath);
     }
-  }, [isAuthLoaded, isLogin, router]);
+  }, [isAuthLoaded, isLogin, redirectPath, router]);
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -67,7 +70,7 @@ export default function LoginPage() {
         await mutate(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`);
         setReloadToast("success", responseData.message);
         showReloadToastIfAny();
-        router.replace("/admin");
+        router.replace(redirectPath);
       }
     } catch {
       setReloadToast("error", "Lỗi kết nối. Vui lòng thử lại.");

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import AuthLayout from "./authLayout";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -7,5 +6,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <AuthLayout>{children}</AuthLayout>;
+  return children;
 }

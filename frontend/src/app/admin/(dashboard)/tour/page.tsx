@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import TourFilter, { TourFilters } from "@/components/features/tour/TourFilter";
-import TourCreate, { TourCategory, TourCity } from "@/components/features/tour/TourCreate";
+import TourFilter, { TourFilters } from "@/components/features/tour/admin/TourFilter";
+import TourCreate, { TourCategory, TourCity } from "@/components/features/tour/admin/TourCreate";
 import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
 import { useAuth } from "@/hooks/useAuth";
 import { FaPen, FaTrash } from "react-icons/fa6";
@@ -67,7 +67,6 @@ export default function TourListPage() {
   const [filters, setFilters] = useState<TourFilters>(defaultFilters);
   const [debouncedFilters, setDebouncedFilters] = useState<TourFilters>(defaultFilters);
   const [status, setStatus] = useState<FetchStatus>("loading");
-  const [error, setError] = useState("");
   const [tours, setTours] = useState<TourItem[]>([]);
 
   const [categories, setCategories] = useState<TourCategory[]>([]);
@@ -94,7 +93,6 @@ export default function TourListPage() {
   const fetchTours = async () => {
     try {
       setStatus("loading");
-      setError("");
 
       const [tourResponse, createResponse] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/tour/list`, {
@@ -154,7 +152,8 @@ export default function TourListPage() {
       setStatus("idle");
     } catch (requestError: any) {
       setStatus("error");
-      setError(requestError.message || "Đã có lỗi xảy ra");
+      setReloadToast("error", requestError.message || "Đã có lỗi xảy ra");
+      showReloadToastIfAny();
     }
   };
 
@@ -354,7 +353,6 @@ export default function TourListPage() {
             setShowCreateForm(false);
             await fetchTours();
             setReloadToast("success", "Tạo tour thành công");
-            showReloadToastIfAny();
           }}
         />
       )}
@@ -364,7 +362,7 @@ export default function TourListPage() {
 
         {status === "error" && (
           <div className="p-8">
-            <p className="text-sm text-red-500 mb-3">{error || "Không tải được danh sách tour"}</p>
+            <p className="text-sm text-red-500 mb-3">Không tải được danh sách tour</p>
             <button type="button" onClick={fetchTours} className="h-10 px-4 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700">
               Thử lại
             </button>

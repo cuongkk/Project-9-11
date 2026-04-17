@@ -32,7 +32,7 @@ export const RevenueChart = ({ selectedMonth }: ChartProps) => {
         const daysInMonth = new Date(year, month, 0).getDate();
         const arrayDay = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/dashboard/revenue-chart`;
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard/revenue-chart`;
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -48,7 +48,8 @@ export const RevenueChart = ({ selectedMonth }: ChartProps) => {
 
         const responseData = await response.json();
 
-        if (responseData.code === "success") {
+        if (responseData.success) {
+          const chartData = responseData.data || {};
           const ctx = canvasRef.current;
           if (ctx) {
             // Destroy previous chart instance if it exists
@@ -63,14 +64,14 @@ export const RevenueChart = ({ selectedMonth }: ChartProps) => {
                 datasets: [
                   {
                     label: "Tháng hiện tại",
-                    data: responseData.dataMonthCurrent,
+                    data: chartData.dataMonthCurrent || [],
                     borderColor: "#4880ff",
                     backgroundColor: "rgba(72, 128, 255, 0.1)",
                     tension: 0.4,
                   },
                   {
                     label: "Tháng trước",
-                    data: responseData.dataMonthPrevious,
+                    data: chartData.dataMonthPrevious || [],
                     borderColor: "#cccccc",
                     backgroundColor: "rgba(200, 200, 200, 0.1)",
                     tension: 0.4,

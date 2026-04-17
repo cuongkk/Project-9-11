@@ -1,17 +1,23 @@
 import { Router } from "express";
+import multer from "multer";
 import * as authController from "./auth.controller";
 import { verifyToken } from "../../middlewares/auth.middleware";
 import { validate } from "../../middlewares/validate.middleware";
+import { storage } from "../../utils/cloudinary.helper";
 import {
+  changePasswordBodySchema,
   forgotPasswordBodySchema,
   loginBodySchema,
   otpBodySchema,
   refreshBodySchema,
   registerBodySchema,
   resetPasswordBodySchema,
+  updateProfileBodySchema,
+  walletPayBodySchema,
 } from "./auth.validation";
 
 const router = Router();
+const upload = multer({ storage });
 
 router.get("/login", authController.login);
 router.post("/login", validate({ body: loginBodySchema }), authController.loginPost);
@@ -29,6 +35,11 @@ router.get("/reset-password", authController.resetPassword);
 router.post("/reset-password", verifyToken, validate({ body: resetPasswordBodySchema }), authController.resetPasswordPost);
 
 router.get("/me", verifyToken, authController.getMe);
+router.patch("/me", verifyToken, validate({ body: updateProfileBodySchema }), authController.updateMePatch);
+router.post("/avatar/upload", verifyToken, upload.single("avatar"), authController.uploadAvatarPost);
+router.patch("/change-password", verifyToken, validate({ body: changePasswordBodySchema }), authController.changePasswordPatch);
+router.get("/wallet/balance", verifyToken, authController.walletBalance);
+router.post("/wallet/pay", verifyToken, validate({ body: walletPayBodySchema }), authController.walletPayPost);
 
 router.get("/logout", authController.logout);
 

@@ -16,6 +16,8 @@ export interface ITour extends Document {
   endDate?: Date;
   information?: string;
   schedules?: any[];
+  rating?: number;
+  reviewCount?: number;
   createdBy?: string;
   updatedBy?: string;
   slug?: string;
@@ -41,6 +43,8 @@ const schema = new Schema<ITour>(
     endDate: { type: Date },
     information: { type: String },
     schedules: { type: [Schema.Types.Mixed], default: [] },
+    rating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 },
     createdBy: { type: String },
     updatedBy: { type: String },
     slug: { type: String, unique: true },

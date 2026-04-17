@@ -3,11 +3,16 @@ import * as dashboardController from "./dashboard.controller";
 import { validate } from "../../middlewares/validate.middleware";
 import { revenueChartBodySchema } from "../../validates/module.validation";
 
-const router = Router();
+const publicRouter = Router();
+const adminRouter = Router();
 
-router.get("/", dashboardController.dashboard);
+adminRouter.get("/", dashboardController.dashboard);
+adminRouter.post("/revenue-chart", validate({ body: revenueChartBodySchema }), dashboardController.revenueChartPost);
 
-router.post("/revenue-chart", validate({ body: revenueChartBodySchema }), dashboardController.revenueChartPost);
+publicRouter.get("/info", dashboardController.info);
+publicRouter.get("/tours", dashboardController.tours);
+publicRouter.get("/tours/:slug", dashboardController.tourDetail);
+publicRouter.get("/gears", dashboardController.gears);
+publicRouter.get("/journals", dashboardController.journals);
 
-router.get("/info", dashboardController.info);
-export default router;
+export { adminRouter as dashboardAdminRouter, publicRouter as dashboardPublicRouter };

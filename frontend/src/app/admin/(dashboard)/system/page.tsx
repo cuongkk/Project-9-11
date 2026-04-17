@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { FilePond, registerPlugin } from "react-filepond";
 import FilePondPluginImagePreview from "filepond-plugin-image-preview";
 import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
+import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
 
 registerPlugin(FilePondPluginImagePreview, FilePondPluginFileValidateType);
 
@@ -39,13 +40,10 @@ export default function SystemPage() {
   const [faviconPondFiles, setFaviconPondFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const loadSetting = async () => {
       setLoading(true);
-      setError(null);
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/setting/info-web`, {
           credentials: "include",
@@ -70,7 +68,8 @@ export default function SystemPage() {
         setLogoPondFiles(info.logo ? [{ source: info.logo, options: { type: "local" as const } }] : []);
         setFaviconPondFiles(info.favicon ? [{ source: info.favicon, options: { type: "local" as const } }] : []);
       } catch (e: any) {
-        setError(e?.message || "Không thể tải thông tin hệ thống");
+        setReloadToast("error", e?.message || "Không thể tải thông tin hệ thống");
+        showReloadToastIfAny();
       } finally {
         setLoading(false);
       }
@@ -81,15 +80,11 @@ export default function SystemPage() {
 
   const setValue = (key: keyof SettingWebsiteInfo, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    setError(null);
-    setSuccess(null);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       const payload = new FormData();
@@ -113,7 +108,8 @@ export default function SystemPage() {
         throw new Error(data.message || "Cập nhật thông tin hệ thống thất bại");
       }
 
-      setSuccess(data.message || "Cập nhật thành công");
+      setReloadToast("success", data.message || "Cập nhật thành công");
+      showReloadToastIfAny();
       setLogoFile(null);
       setFaviconFile(null);
       if (logoPondFiles.length > 0) {
@@ -138,7 +134,8 @@ export default function SystemPage() {
         setFaviconPondFiles(info.favicon ? [{ source: info.favicon, options: { type: "local" as const } }] : []);
       }
     } catch (e: any) {
-      setError(e?.message || "Cập nhật thông tin hệ thống thất bại");
+      setReloadToast("error", e?.message || "Cập nhật thông tin hệ thống thất bại");
+      showReloadToastIfAny();
     } finally {
       setSaving(false);
     }
@@ -153,9 +150,6 @@ export default function SystemPage() {
 
         {!loading && (
           <form onSubmit={handleSubmit} className="rounded-xl border border-gray-100 bg-white shadow-sm p-4 md:p-6 space-y-5">
-            {error && <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-600">{error}</div>}
-            {success && <div className="rounded-lg border border-green-100 bg-green-50 p-3 text-sm text-green-700">{success}</div>}
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tên website</label>

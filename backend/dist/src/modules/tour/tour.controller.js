@@ -44,6 +44,8 @@ exports.list = (0, async_handler_1.asyncHandler)(async (req, res) => {
 });
 exports.create = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const data = await tourService.create(req);
+    if (data.code === "error")
+        throw new error_middleware_1.HttpError(400, data.message || "Tạo tour thất bại!");
     (0, response_1.sendSuccess)(res, "Lấy dữ liệu tạo tour thành công!", data);
 });
 exports.createPost = (0, async_handler_1.asyncHandler)(async (req, res) => {

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import TourEdit, { TourDetail } from "@/components/features/tour/TourEdit";
-import type { TourCategory, TourCity } from "@/components/features/tour/TourCreate";
-import { setReloadToast } from "@/utils/toast";
+import TourEdit, { TourDetail } from "@/components/features/tour/admin/TourEdit";
+import type { TourCategory, TourCity } from "@/components/features/tour/admin/TourCreate";
+import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
 import { useAuth } from "@/hooks/useAuth";
 
 type FetchStatus = "idle" | "loading" | "error";
@@ -50,7 +50,6 @@ export default function TourEditPage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [status, setStatus] = useState<FetchStatus>("loading");
-  const [error, setError] = useState("");
   const [tour, setTour] = useState<TourDetail | null>(null);
   const [categories, setCategories] = useState<TourCategory[]>([]);
   const [cities, setCities] = useState<TourCity[]>([]);
@@ -60,7 +59,6 @@ export default function TourEditPage() {
 
     try {
       setStatus("loading");
-      setError("");
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tour/edit/${id}`, {
         credentials: "include",
@@ -95,7 +93,8 @@ export default function TourEditPage() {
       setStatus("idle");
     } catch (requestError: any) {
       setStatus("error");
-      setError(requestError.message || "Không tải được dữ liệu");
+      setReloadToast("error", requestError.message || "Không tải được dữ liệu");
+      showReloadToastIfAny();
     }
   };
 
@@ -134,7 +133,7 @@ export default function TourEditPage() {
 
       {status === "error" && (
         <div className="rounded-xl border border-red-100 bg-red-50 p-6">
-          <p className="text-sm text-red-500 mb-3">{error || "Không thể tải dữ liệu"}</p>
+          <p className="text-sm text-red-500 mb-3">Không thể tải dữ liệu</p>
           <button type="button" onClick={fetchDetail} className="h-10 px-4 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700">
             Thử lại
           </button>

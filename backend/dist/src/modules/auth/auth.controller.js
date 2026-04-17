@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.refreshPost = exports.getMe = exports.logout = exports.resetPasswordPost = exports.resetPassword = exports.otpPasswordPost = exports.otpPassword = exports.forgotPasswordPost = exports.forgotPassword = exports.registerPost = exports.register = exports.loginPost = exports.login = void 0;
+exports.refreshPost = exports.walletPayPost = exports.walletBalance = exports.uploadAvatarPost = exports.changePasswordPatch = exports.updateMePatch = exports.getMe = exports.logout = exports.resetPasswordPost = exports.resetPassword = exports.otpPasswordPost = exports.otpPassword = exports.forgotPasswordPost = exports.forgotPassword = exports.registerPost = exports.register = exports.loginPost = exports.login = void 0;
 const authService = __importStar(require("./auth.service"));
 const async_handler_1 = require("../../utils/async-handler");
 const response_1 = require("../../utils/response");
@@ -105,6 +105,26 @@ exports.logout = logout;
 exports.getMe = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const data = await authService.getMe(req);
     (0, response_1.sendSuccess)(res, "Lấy thông tin người dùng thành công", data);
+});
+exports.updateMePatch = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await authService.updateMe(req);
+    (0, response_1.sendSuccess)(res, "Cập nhật thông tin người dùng thành công", data);
+});
+exports.changePasswordPatch = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await authService.changePassword(req);
+    (0, response_1.sendSuccess)(res, "Đổi mật khẩu thành công", data);
+});
+exports.uploadAvatarPost = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await authService.uploadMyAvatar(req);
+    (0, response_1.sendSuccess)(res, "Tải ảnh đại diện thành công", data);
+});
+exports.walletBalance = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await authService.getWalletBalance(req);
+    (0, response_1.sendSuccess)(res, "Lấy số dư tài khoản thành công", data);
+});
+exports.walletPayPost = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await authService.walletPay(req);
+    (0, response_1.sendSuccess)(res, "Thanh toán thành công", data);
 });
 exports.refreshPost = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const data = await authService.refresh(req);

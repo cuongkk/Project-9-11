@@ -13,7 +13,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="vi-VN">
       <body>
         <ToastProvider />
         <main className="flex-1">{children}</main>

@@ -8,10 +8,27 @@ import { Request } from "express";
 import { newJti, signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from "./auth.tokens";
 import { HttpError } from "../../middlewares/error.middleware";
 
+const serializeAccount = (accountInput: any) => {
+  const account = accountInput?.toObject ? accountInput.toObject() : accountInput;
+
+  return {
+    id: account?._id?.toString?.() || "",
+    fullName: account?.fullName || "",
+    email: account?.email || "",
+    phone: account?.phone || "",
+    avatar: account?.avatar || "",
+    role: account?.role || "client",
+    status: account?.status || "",
+    walletBalance: Number(account?.walletBalance || 0),
+    createdAt: account?.createdAt,
+    updatedAt: account?.updatedAt,
+  };
+};
+
 export const login = async (req: Request) => {
   const { email, password, rememberPassword } = req.body as { email: string; password: string; rememberPassword?: boolean };
 
-  const existAccount = await AccountAdmin.findOne({ email });
+  const existAccount = await AccountAdmin.findOne({ email, deleted: false });
 
   if (!existAccount) {
     throw new HttpError(401, "Email không tồn tại trong hệ thống");
@@ -28,7 +45,7 @@ export const login = async (req: Request) => {
   }
 
   const userId = existAccount._id.toString();
-  const userType = "admin" as const;
+  const userType = ((existAccount.role || "client") as string).toLowerCase() === "admin" ? "admin" : "client";
 
   const accessToken = signAccessToken({ sub: userId, userType });
 
@@ -59,7 +76,7 @@ export const login = async (req: Request) => {
 export const register = async (req: Request) => {
   const { fullName, email, password, ...rest } = req.body as any;
 
-  const existAccount = await AccountAdmin.findOne({ email });
+  const existAccount = await AccountAdmin.findOne({ email, deleted: false });
 
   if (existAccount) {
     throw new HttpError(409, "Email đã tồn tại, vui lòng sử dụng email khác");
@@ -69,7 +86,8 @@ export const register = async (req: Request) => {
     ...rest,
     fullName,
     email,
-    status: "initial",
+    status: "active",
+    role: rest.role || "client",
   };
 
   if (fullName) {
@@ -168,7 +186,7 @@ export const getMe = async (req: Request) => {
   const accountFromMiddleware = (req as any).account;
   if (accountFromMiddleware) {
     return {
-      account: accountFromMiddleware,
+      account: serializeAccount(accountFromMiddleware),
     };
   }
 
@@ -188,11 +206,179 @@ export const getMe = async (req: Request) => {
     }
 
     return {
-      account,
+      account: serializeAccount(account),
     };
   } catch (error) {
     throw new HttpError(401, "Token không hợp lệ hoặc đã hết hạn");
   }
+};
+
+export const updateMe = async (req: Request) => {
+  const accountFromMiddleware = (req as any).account;
+
+  if (!accountFromMiddleware?._id) {
+    throw new HttpError(401, "Bạn cần đăng nhập để cập nhật thông tin");
+  }
+
+  const { fullName, phone, avatar } = req.body as {
+    fullName?: string;
+    phone?: string | null;
+    avatar?: string | null;
+  };
+
+  const updates: Record<string, unknown> = {};
+
+  if (typeof fullName === "string") {
+    const normalizedName = fullName.trim();
+    if (!normalizedName) {
+      throw new HttpError(400, "Họ và tên không hợp lệ");
+    }
+
+    updates.fullName = normalizedName;
+    updates.slug = slugify(normalizedName, { lower: true, strict: true });
+  }
+
+  if (phone !== undefined) {
+    updates.phone = typeof phone === "string" ? phone.trim() : "";
+  }
+
+  if (avatar !== undefined) {
+    updates.avatar = typeof avatar === "string" ? avatar.trim() : "";
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw new HttpError(400, "Không có dữ liệu để cập nhật");
+  }
+
+  const updatedAccount = await AccountAdmin.findByIdAndUpdate(accountFromMiddleware._id, { $set: updates }, { new: true });
+
+  if (!updatedAccount) {
+    throw new HttpError(404, "Tài khoản không tồn tại");
+  }
+
+  return {
+    account: serializeAccount(updatedAccount),
+  };
+};
+
+export const changePassword = async (req: Request) => {
+  const accountFromMiddleware = (req as any).account;
+
+  if (!accountFromMiddleware?._id) {
+    throw new HttpError(401, "Bạn cần đăng nhập để đổi mật khẩu");
+  }
+
+  const { currentPassword, newPassword } = req.body as {
+    currentPassword: string;
+    newPassword: string;
+  };
+
+  if (currentPassword === newPassword) {
+    throw new HttpError(400, "Mật khẩu mới phải khác mật khẩu hiện tại");
+  }
+
+  const account = await AccountAdmin.findById(accountFromMiddleware._id);
+  if (!account) {
+    throw new HttpError(404, "Tài khoản không tồn tại");
+  }
+
+  const isPasswordValid = await bcrypt.compare(currentPassword, account.password);
+  if (!isPasswordValid) {
+    throw new HttpError(400, "Mật khẩu hiện tại không chính xác");
+  }
+
+  const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+  await AccountAdmin.updateOne(
+    { _id: account._id },
+    {
+      $set: {
+        password: newPasswordHash,
+      },
+      $unset: {
+        refreshTokenHash: "",
+        refreshTokenJti: "",
+      },
+    },
+  );
+
+  return {
+    ok: true,
+  };
+};
+
+export const uploadMyAvatar = async (req: Request) => {
+  const accountFromMiddleware = (req as any).account;
+  if (!accountFromMiddleware?._id) {
+    throw new HttpError(401, "Bạn cần đăng nhập để cập nhật ảnh đại diện");
+  }
+
+  const uploadedFile = (req as any).file;
+  const avatarUrl = uploadedFile?.path || uploadedFile?.secure_url;
+
+  if (!avatarUrl) {
+    throw new HttpError(400, "Không tìm thấy tệp ảnh hợp lệ");
+  }
+
+  const updatedAccount = await AccountAdmin.findByIdAndUpdate(accountFromMiddleware._id, { $set: { avatar: String(avatarUrl).trim() } }, { new: true });
+
+  if (!updatedAccount) {
+    throw new HttpError(404, "Tài khoản không tồn tại");
+  }
+
+  return {
+    avatar: updatedAccount.avatar || "",
+    account: serializeAccount(updatedAccount),
+  };
+};
+
+export const getWalletBalance = async (req: Request) => {
+  const accountFromMiddleware = (req as any).account;
+  if (!accountFromMiddleware?._id) {
+    throw new HttpError(401, "Bạn cần đăng nhập để xem số dư");
+  }
+
+  const account = await AccountAdmin.findById(accountFromMiddleware._id);
+  if (!account) {
+    throw new HttpError(404, "Tài khoản không tồn tại");
+  }
+
+  return {
+    balance: Number(account.walletBalance || 0),
+  };
+};
+
+export const walletPay = async (req: Request) => {
+  const accountFromMiddleware = (req as any).account;
+  if (!accountFromMiddleware?._id) {
+    throw new HttpError(401, "Bạn cần đăng nhập để thanh toán");
+  }
+
+  const { amount } = req.body as { amount: number };
+  const normalizedAmount = Number(amount);
+
+  if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
+    throw new HttpError(400, "Số tiền thanh toán không hợp lệ");
+  }
+
+  const account = await AccountAdmin.findById(accountFromMiddleware._id);
+  if (!account) {
+    throw new HttpError(404, "Tài khoản không tồn tại");
+  }
+
+  const currentBalance = Number(account.walletBalance || 0);
+  if (currentBalance < normalizedAmount) {
+    throw new HttpError(400, "Số dư không đủ để thanh toán");
+  }
+
+  const nextBalance = Number((currentBalance - normalizedAmount).toFixed(2));
+  await AccountAdmin.updateOne({ _id: account._id }, { $set: { walletBalance: nextBalance } });
+
+  return {
+    paidAmount: normalizedAmount,
+    balance: nextBalance,
+    transactionCode: `PAY-${Date.now()}`,
+  };
 };
 
 export const refresh = async (req: Request) => {
@@ -200,7 +386,7 @@ export const refresh = async (req: Request) => {
 
   const decoded = verifyRefreshToken(refreshToken);
 
-  if (decoded.userType !== "admin") {
+  if (decoded.userType !== "admin" && decoded.userType !== "client") {
     throw new HttpError(403, "Unsupported user type");
   }
 
@@ -228,10 +414,7 @@ export const refresh = async (req: Request) => {
 
   // Rotate refresh token
   const newRefreshJti = newJti();
-  const newRefreshToken = signRefreshToken(
-    { sub: account._id.toString(), userType: decoded.userType, jti: newRefreshJti },
-    true,
-  );
+  const newRefreshToken = signRefreshToken({ sub: account._id.toString(), userType: decoded.userType, jti: newRefreshJti }, true);
   const newRefreshHash = await bcrypt.hash(newRefreshToken, 10);
 
   await AccountAdmin.updateOne(

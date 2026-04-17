@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.revenueChartPost = exports.info = exports.dashboard = void 0;
+exports.revenueChartPost = exports.journals = exports.gears = exports.tourDetail = exports.tours = exports.info = exports.dashboard = void 0;
 const dashboardService = __importStar(require("./dashboard.service"));
 const async_handler_1 = require("../../utils/async-handler");
 const response_1 = require("../../utils/response");
@@ -44,6 +44,22 @@ exports.dashboard = (0, async_handler_1.asyncHandler)(async (req, res) => {
 exports.info = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const data = await dashboardService.info(req);
     (0, response_1.sendSuccess)(res, "Lấy thông tin thành công!", data);
+});
+exports.tours = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await dashboardService.tours(req);
+    (0, response_1.sendSuccess)(res, "Lấy danh sách tour thành công!", data);
+});
+exports.tourDetail = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await dashboardService.tourDetail(req);
+    (0, response_1.sendSuccess)(res, "Lấy chi tiết tour thành công!", data);
+});
+exports.gears = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await dashboardService.gears(req);
+    (0, response_1.sendSuccess)(res, "Lấy danh sách gear thành công!", data);
+});
+exports.journals = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await dashboardService.journals(req);
+    (0, response_1.sendSuccess)(res, "Lấy danh sách journal thành công!", data);
 });
 exports.revenueChartPost = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const data = await dashboardService.revenueChartPost(req);

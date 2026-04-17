@@ -1,6 +1,7 @@
 "use client";
 
 import { FaGlobe } from "react-icons/fa";
+import { FaEarthAsia, FaShareNodes } from "react-icons/fa6";
 
 export const Footer = () => {
   return (
@@ -14,10 +15,10 @@ export const Footer = () => {
               <FaGlobe className="text-sm" />
             </a>
             <a className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white hover:bg-primary transition-colors" href="#">
-              <span className="material-symbols-outlined text-sm">public</span>
+              <FaEarthAsia className="material-symbols-outlined text-sm"></FaEarthAsia>
             </a>
             <a className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white hover:bg-primary transition-colors" href="#">
-              <span className="material-symbols-outlined text-sm">share</span>
+              <FaShareNodes className="material-symbols-outlined text-sm"></FaShareNodes>
             </a>
           </div>
         </div>

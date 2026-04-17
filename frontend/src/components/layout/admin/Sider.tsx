@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { siderList, settingList } from "../../../configs/admin.config";
 import { usePathname } from "next/dist/client/components/navigation";
-import { FaBars } from "react-icons/fa6";
 
 interface SiderProps {
   isOpen: boolean;

@@ -4,7 +4,7 @@ import { storage } from "../../utils/cloudinary.helper";
 import * as tourController from "./tour.controller";
 import { validate } from "../../middlewares/validate.middleware";
 import { objectIdParamSchema } from "../../validates/common.validation";
-import { changeMultiBodySchema } from "../../validates/module.validation";
+import { changeMultiBodySchema, createTourBodySchema, editTourBodySchema } from "../../validates/module.validation";
 
 const router = Router();
 
@@ -26,6 +26,7 @@ router.post(
       maxCount: 10,
     },
   ]),
+  validate({ body: createTourBodySchema }),
   tourController.createPost,
 );
 
@@ -44,6 +45,7 @@ router.patch(
       maxCount: 10,
     },
   ]),
+  validate({ body: editTourBodySchema }),
   tourController.editPatch,
 );
 

@@ -33,3 +33,22 @@ export const refreshBodySchema = Joi.object({
   refreshToken: Joi.string().trim().min(10).required(),
 }).required();
 
+export const changePasswordBodySchema = Joi.object({
+  currentPassword: Joi.string().min(6).required(),
+  newPassword: Joi.string().min(6).required(),
+  confirmPassword: Joi.string().valid(Joi.ref("newPassword")).required().messages({
+    "any.only": "confirmPassword must match newPassword",
+  }),
+}).required();
+
+export const walletPayBodySchema = Joi.object({
+  amount: Joi.number().positive().required(),
+}).required();
+
+export const updateProfileBodySchema = Joi.object({
+  fullName: Joi.string().trim().min(1).max(120),
+  phone: Joi.string().trim().allow("", null).max(20),
+  avatar: Joi.string().trim().allow("", null),
+})
+  .min(1)
+  .required();

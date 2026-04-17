@@ -41,15 +41,15 @@ export default function Dashboard() {
     const fetchDashboard = async () => {
       setIsLoading(true);
       try {
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/dashboard`;
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard`;
         const response = await fetch(apiUrl, {
           credentials: "include",
         });
 
         const responseData = await response.json();
 
-        if (responseData.code === "success") {
-          setOverview(responseData.overview);
+        if (responseData.success) {
+          setOverview(responseData.data?.overview || { totalAdmin: 0, totalOrder: 0, totalRevenue: 0 });
         } else {
           setReloadToast("error", responseData.message || "Lỗi khi tải dữ liệu dashboard");
         }

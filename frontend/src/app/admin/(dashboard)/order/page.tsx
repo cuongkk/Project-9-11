@@ -5,6 +5,7 @@ import Filter from "@/components/features/order/OrderFilter";
 import OrderTable, { Order } from "@/components/features/order/OrderTable";
 import Pagination from "@/components/ui/Pagination";
 import { useRouter } from "next/navigation";
+import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
 
 export default function OrderPage() {
   const router = useRouter();
@@ -12,7 +13,6 @@ export default function OrderPage() {
   // State
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [filters, setFilters] = useState({
     status: "",
@@ -56,15 +56,14 @@ export default function OrderPage() {
   // Fetch logic
   const fetchOrders = useCallback(async () => {
     setIsLoading(true);
-    setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/order/list`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/order/list`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Không thể tải dữ liệu đơn hàng");
 
       const data = await res.json();
-      const sourceOrders = (data.orderList || []).map(mapOrder);
+      const sourceOrders = (data.data?.orderList || []).map(mapOrder);
 
       const keyword = filters.keyword.trim().toLowerCase();
       const filteredOrders = sourceOrders.filter((order: Order) => {
@@ -97,7 +96,8 @@ export default function OrderPage() {
       setOrders(paginatedOrders);
       setPagination((prev) => ({ ...prev, totalItems, totalPages }));
     } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra");
+      setReloadToast("error", err.message || "Có lỗi xảy ra");
+      showReloadToastIfAny();
     } finally {
       setIsLoading(false);
     }
@@ -137,19 +137,20 @@ export default function OrderPage() {
     if (!confirm("Bạn có chắc chắn muốn xóa đơn hàng này?")) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/order/edit/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/order/edit/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ status: "cancelled" }),
+        body: JSON.stringify({ status: "cancel" }),
       });
       if (!res.ok) throw new Error("Cập nhật thất bại");
 
       await fetchOrders();
     } catch (err: any) {
-      alert(err.message || "Lỗi khi xóa");
+      setReloadToast("error", err.message || "Lỗi khi xóa");
+      showReloadToastIfAny();
     }
   };
 
@@ -159,16 +160,6 @@ export default function OrderPage() {
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Quản lý đơn hàng</h1>
 
         <Filter filters={filters} onChange={handleFilterChange} onReset={handleFilterReset} />
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 mb-6 flex items-center gap-3">
-            <i className="fa-solid fa-triangle-exclamation"></i>
-            {error}
-            <button onClick={() => fetchOrders()} className="ml-auto underline font-medium text-sm">
-              Thử lại
-            </button>
-          </div>
-        )}
 
         <div className="relative">
           {isLoading && (

@@ -34,6 +34,12 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
+const cartItemSchema = new mongoose_1.Schema({
+    tourId: { type: String, required: true },
+    quantity: { type: Number, default: 1 },
+    locationFrom: { type: String },
+    departureDate: { type: Date },
+}, { _id: false });
 const schema = new mongoose_1.Schema({
     fullName: { type: String },
     email: { type: String, required: true, unique: true },
@@ -48,6 +54,8 @@ const schema = new mongoose_1.Schema({
     createdBy: { type: String },
     updatedBy: { type: String },
     slug: { type: String, unique: true },
+    cart: { type: [cartItemSchema], default: [] },
+    walletBalance: { type: Number, default: 0, min: 0 },
     deleted: { type: Boolean, default: false },
     deletedBy: { type: String },
     deletedAt: { type: Date },

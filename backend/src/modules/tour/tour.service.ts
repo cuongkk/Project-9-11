@@ -1,5 +1,6 @@
 import type { Request } from "express";
 import moment from "moment";
+import slugify from "slugify";
 import Category from "../category/category.model";
 import City from "../city/city.model";
 import { buildCategoryTree } from "../category/category.helper";
@@ -21,6 +22,96 @@ const normalizeTourPricing = (body: any): void => {
   body.price = basePrice;
   body.priceNew = salePrice;
   body.stock = stock;
+};
+
+const parseJsonArrayField = (value: unknown, fallback: any[] = []): { value: any[]; error?: string } => {
+  if (value === undefined) {
+    return { value: fallback };
+  }
+
+  if (Array.isArray(value)) {
+    return { value };
+  }
+
+  if (typeof value === "string") {
+    if (!value.trim()) {
+      return { value: [] };
+    }
+
+    try {
+      const parsed = JSON.parse(value);
+      if (!Array.isArray(parsed)) {
+        return { value: fallback, error: "Dữ liệu mảng không hợp lệ!" };
+      }
+      return { value: parsed };
+    } catch (_error) {
+      return { value: fallback, error: "Dữ liệu mảng không hợp lệ!" };
+    }
+  }
+
+  return { value: fallback, error: "Dữ liệu mảng không hợp lệ!" };
+};
+
+const parseDateField = (value: unknown, fallback: Date | null = null): { value: Date | null; error?: string } => {
+  if (value === undefined) {
+    return { value: fallback };
+  }
+  if (value === null || value === "") {
+    return { value: null };
+  }
+  const parsed = new Date(String(value));
+  if (Number.isNaN(parsed.getTime())) {
+    return { value: fallback, error: "Ngày không hợp lệ!" };
+  }
+  return { value: parsed };
+};
+
+const ensureValidDateRange = (departureDate: Date | null, endDate: Date | null): string | null => {
+  if ((departureDate && !endDate) || (!departureDate && endDate)) {
+    return "Ngày khởi hành và ngày kết thúc phải được nhập đồng thời!";
+  }
+  if (departureDate && endDate && endDate.getTime() < departureDate.getTime()) {
+    return "Ngày kết thúc phải lớn hơn hoặc bằng ngày khởi hành!";
+  }
+  return null;
+};
+
+const buildDurationLabel = (departureDate: Date | null, endDate: Date | null): string => {
+  if (!departureDate || !endDate) {
+    return "";
+  }
+  const diffMs = endDate.getTime() - departureDate.getTime();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const days = Math.ceil(diffMs / dayMs) + 1;
+  return `${days} ngày`;
+};
+
+const extractSlugBase = (value: unknown): string => {
+  const raw = String(value || "").trim();
+  return slugify(raw, { lower: true, strict: true });
+};
+
+const buildUniqueTourSlug = async (slugBase: string, excludeId?: string): Promise<string> => {
+  let base = slugBase || `tour-${Date.now()}`;
+  let candidate = base;
+  let counter = 1;
+
+  while (true) {
+    const condition: any = { slug: candidate };
+    if (excludeId) {
+      condition._id = { $ne: excludeId };
+    }
+    const existed = await Tour.findOne(condition).select("_id");
+    if (!existed) {
+      return candidate;
+    }
+    candidate = `${base}-${counter}`;
+    counter += 1;
+  }
+};
+
+const isDuplicateKeyError = (error: unknown): boolean => {
+  return typeof error === "object" && error !== null && (error as any).code === 11000;
 };
 
 export const list = async (req: Request): Promise<{ tourList: any[]; pagination: any }> => {
@@ -54,45 +145,60 @@ export const create = async (req: Request): Promise<{ categoryList: any[]; cityL
 };
 
 export const createPost = async (req: Request): Promise<{ code: string; message: string }> => {
-  const anyReq = req as any;
-  const reqWithAccount = req as AccountRequest;
+  try {
+    const anyReq = req as any;
+    const reqWithAccount = req as AccountRequest;
 
-  if (anyReq.files?.avatar?.[0]) {
-    anyReq.body.avatar = anyReq.files.avatar[0].path;
-  } else {
-    anyReq.body.avatar = "";
+    const payload: any = { ...anyReq.body };
+    normalizeTourPricing(payload);
+
+    const locationsParsed = parseJsonArrayField(payload.locations, []);
+    if (locationsParsed.error) {
+      return { code: "error", message: "Danh sách điểm đến không hợp lệ!" };
+    }
+    const schedulesParsed = parseJsonArrayField(payload.schedules, []);
+    if (schedulesParsed.error) {
+      return { code: "error", message: "Lịch trình tour không hợp lệ!" };
+    }
+    payload.locations = locationsParsed.value;
+    payload.schedules = schedulesParsed.value;
+
+    const departureDateParsed = parseDateField(payload.departureDate, null);
+    if (departureDateParsed.error) {
+      return { code: "error", message: "Ngày khởi hành không hợp lệ!" };
+    }
+    const endDateParsed = parseDateField(payload.endDate, null);
+    if (endDateParsed.error) {
+      return { code: "error", message: "Ngày kết thúc không hợp lệ!" };
+    }
+    const dateRangeError = ensureValidDateRange(departureDateParsed.value, endDateParsed.value);
+    if (dateRangeError) {
+      return { code: "error", message: dateRangeError };
+    }
+    payload.departureDate = departureDateParsed.value;
+    payload.endDate = endDateParsed.value;
+    payload.time = buildDurationLabel(payload.departureDate, payload.endDate);
+
+    payload.avatar = anyReq.files?.avatar?.[0]?.path || "";
+    payload.images = anyReq.files?.images?.length ? anyReq.files.images.map((item: any) => item.path) : [];
+    payload.createdBy = reqWithAccount.account?.id;
+
+    const slugBase = extractSlugBase(payload.slug || payload.name);
+    payload.slug = await buildUniqueTourSlug(slugBase);
+
+    const newRecord = new Tour(payload);
+    await newRecord.save();
+
+    return {
+      code: "success",
+      message: "Đã tạo tour!",
+    };
+  } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return { code: "error", message: "Slug tour đã tồn tại, vui lòng thử tên khác!" };
+    }
+    return { code: "error", message: "Tạo tour thất bại, vui lòng thử lại!" };
   }
-
-  if (anyReq.files?.images?.length) {
-    anyReq.body.images = anyReq.files.images.map((item: any) => item.path);
-  } else {
-    anyReq.body.images = [];
-  }
-
-  normalizeTourPricing(anyReq.body);
-  anyReq.body.locations = anyReq.body.locations ? JSON.parse(anyReq.body.locations) : [];
-  anyReq.body.departureDate = anyReq.body.departureDate ? new Date(anyReq.body.departureDate) : null;
-  anyReq.body.endDate = anyReq.body.endDate ? new Date(anyReq.body.endDate) : null;
-
-  if (anyReq.body.departureDate && anyReq.body.endDate) {
-    const diffMs = anyReq.body.endDate.getTime() - anyReq.body.departureDate.getTime();
-    const dayMs = 24 * 60 * 60 * 1000;
-    const days = Math.max(1, Math.ceil(diffMs / dayMs));
-    anyReq.body.time = `${days} ngày`;
-  } else {
-    anyReq.body.time = "";
-  }
-
-  anyReq.body.schedules = anyReq.body.schedules ? JSON.parse(anyReq.body.schedules) : [];
-  anyReq.body.createdBy = reqWithAccount.account?.id;
-
-  const newRecord = new Tour(anyReq.body);
-  await newRecord.save();
-
-  return {
-    code: "success",
-    message: "Đã tạo tour!",
-  };
 };
 
 export const trash = async (req: Request): Promise<{ tourList: any[] }> => {
@@ -153,47 +259,97 @@ export const editPatch = async (req: Request): Promise<{ code: string; message: 
       };
     }
 
+    const updatePayload: Record<string, any> = {};
+    const incomingBody = (anyReq.body || {}) as Record<string, unknown>;
+
+    for (const field of ["name", "category", "status", "position", "information"]) {
+      if (incomingBody[field] !== undefined) {
+        updatePayload[field] = incomingBody[field];
+      }
+    }
+
+    if (incomingBody.price !== undefined || incomingBody.priceNew !== undefined || incomingBody.stock !== undefined || incomingBody.priceAdult !== undefined || incomingBody.priceNewAdult !== undefined || incomingBody.stockAdult !== undefined) {
+      const pricingPayload = {
+        price: incomingBody.price ?? tourDetail.price,
+        priceNew: incomingBody.priceNew ?? tourDetail.priceNew,
+        stock: incomingBody.stock ?? tourDetail.stock,
+        priceAdult: incomingBody.priceAdult,
+        priceNewAdult: incomingBody.priceNewAdult,
+        stockAdult: incomingBody.stockAdult,
+      };
+      normalizeTourPricing(pricingPayload);
+      updatePayload.price = pricingPayload.price;
+      updatePayload.priceNew = pricingPayload.priceNew;
+      updatePayload.stock = pricingPayload.stock;
+    }
+
+    if (incomingBody.locations !== undefined) {
+      const locationsParsed = parseJsonArrayField(incomingBody.locations);
+      if (locationsParsed.error) {
+        return { code: "error", message: "Danh sách điểm đến không hợp lệ!" };
+      }
+      updatePayload.locations = locationsParsed.value;
+    }
+
+    if (incomingBody.schedules !== undefined) {
+      const schedulesParsed = parseJsonArrayField(incomingBody.schedules);
+      if (schedulesParsed.error) {
+        return { code: "error", message: "Lịch trình tour không hợp lệ!" };
+      }
+      updatePayload.schedules = schedulesParsed.value;
+    }
+
+    const hasDepartureDate = Object.prototype.hasOwnProperty.call(incomingBody, "departureDate");
+    const hasEndDate = Object.prototype.hasOwnProperty.call(incomingBody, "endDate");
+    if (hasDepartureDate || hasEndDate) {
+      const departureDateParsed = parseDateField(incomingBody.departureDate, tourDetail.departureDate || null);
+      if (departureDateParsed.error) {
+        return { code: "error", message: "Ngày khởi hành không hợp lệ!" };
+      }
+      const endDateParsed = parseDateField(incomingBody.endDate, tourDetail.endDate || null);
+      if (endDateParsed.error) {
+        return { code: "error", message: "Ngày kết thúc không hợp lệ!" };
+      }
+      const dateRangeError = ensureValidDateRange(departureDateParsed.value, endDateParsed.value);
+      if (dateRangeError) {
+        return { code: "error", message: dateRangeError };
+      }
+
+      updatePayload.departureDate = departureDateParsed.value;
+      updatePayload.endDate = endDateParsed.value;
+      updatePayload.time = buildDurationLabel(departureDateParsed.value, endDateParsed.value);
+    }
+
     if (anyReq.files?.avatar?.[0]) {
-      anyReq.body.avatar = anyReq.files.avatar[0].path;
-    } else {
-      anyReq.body.avatar = tourDetail.avatar || "";
+      updatePayload.avatar = anyReq.files.avatar[0].path;
     }
 
     if (anyReq.files?.images?.length) {
       const uploadedImages = anyReq.files.images.map((item: any) => item.path);
-      anyReq.body.images = [...(tourDetail.images || []), ...uploadedImages];
-    } else {
-      anyReq.body.images = tourDetail.images || [];
+      updatePayload.images = [...(tourDetail.images || []), ...uploadedImages];
     }
 
-    normalizeTourPricing(anyReq.body);
-    anyReq.body.locations = anyReq.body.locations ? JSON.parse(anyReq.body.locations) : [];
-    anyReq.body.vehicle = anyReq.body.vehicle || tourDetail.vehicle || "";
-    anyReq.body.departureDate = anyReq.body.departureDate ? new Date(anyReq.body.departureDate) : tourDetail.departureDate || null;
-    anyReq.body.endDate = anyReq.body.endDate ? new Date(anyReq.body.endDate) : tourDetail.endDate || null;
-
-    if (anyReq.body.departureDate && anyReq.body.endDate) {
-      const diffMs = anyReq.body.endDate.getTime() - anyReq.body.departureDate.getTime();
-      const dayMs = 24 * 60 * 60 * 1000;
-      const days = Math.max(1, Math.ceil(diffMs / dayMs));
-      anyReq.body.time = `${days} ngày`;
-    } else {
-      anyReq.body.time = tourDetail.time || "";
+    const slugSource = incomingBody.slug ?? incomingBody.name;
+    if (slugSource !== undefined) {
+      const slugBase = extractSlugBase(slugSource);
+      updatePayload.slug = await buildUniqueTourSlug(slugBase, id);
     }
 
-    anyReq.body.schedules = anyReq.body.schedules ? JSON.parse(anyReq.body.schedules) : [];
-    anyReq.body.updatedBy = reqWithAccount.account?.id;
+    updatePayload.updatedBy = reqWithAccount.account?.id;
 
-    await Tour.updateOne({ _id: id, deleted: false }, anyReq.body);
+    await Tour.updateOne({ _id: id, deleted: false }, updatePayload);
 
     return {
       code: "success",
       message: "Đã cập nhật tour!",
     };
   } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      return { code: "error", message: "Slug tour đã tồn tại, vui lòng thử tên khác!" };
+    }
     return {
       code: "error",
-      message: "Tour không tồn tại!",
+      message: "Cập nhật tour thất bại!",
     };
   }
 };
@@ -250,6 +406,8 @@ export const undoPatch = async (req: Request): Promise<{ code: string; message: 
       { _id: id, deleted: true },
       {
         deleted: false,
+        deletedBy: "",
+        deletedAt: null,
       },
     );
 
@@ -333,6 +491,8 @@ export const changeMultiPatch = async (req: Request): Promise<{ code: string; me
           { _id: { $in: listId }, deleted: true },
           {
             deleted: false,
+            deletedBy: "",
+            deletedAt: null,
           },
         );
         return {

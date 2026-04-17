@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import OrderEdit, { OrderDetail } from "@/components/features/order/OrderEdit";
-import { setReloadToast } from "@/utils/toast";
+import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
 
 type OrderEditResponse = {
-  code: "success" | "error";
+  success: boolean;
   message: string;
-  orderDetail?: any;
+  data?: {
+    orderDetail?: any;
+  };
 };
 
 const mapOrderDetail = (data: any): OrderDetail => ({
@@ -41,17 +43,17 @@ export default function OrderDetailPage() {
 
   const [orderDetail, setOrderDetail] = useState<OrderDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
       if (!orderId) return;
 
       setIsLoading(true);
-      setError(null);
+      setLoadFailed(false);
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/order/edit/${orderId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/order/edit/${orderId}`, {
           credentials: "include",
         });
 
@@ -61,13 +63,15 @@ export default function OrderDetailPage() {
 
         const data: OrderEditResponse = await res.json();
 
-        if (data.code !== "success" || !data.orderDetail) {
+        if (!data.success || !data.data?.orderDetail) {
           throw new Error(data.message || "Không tìm thấy đơn hàng");
         }
 
-        setOrderDetail(mapOrderDetail(data.orderDetail));
+        setOrderDetail(mapOrderDetail(data.data.orderDetail));
       } catch (e: any) {
-        setError(e.message || "Có lỗi xảy ra khi tải đơn hàng");
+        setLoadFailed(true);
+        setReloadToast("error", e.message || "Có lỗi xảy ra khi tải đơn hàng");
+        showReloadToastIfAny();
       } finally {
         setIsLoading(false);
       }
@@ -88,7 +92,7 @@ export default function OrderDetailPage() {
       status: payload.status,
     };
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/order/edit/${orderId}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/order/edit/${orderId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -99,7 +103,7 @@ export default function OrderDetailPage() {
 
     const data: OrderEditResponse = await res.json();
 
-    if (!res.ok || data.code !== "success") {
+    if (!res.ok || !data.success) {
       throw new Error(data.message || "Cập nhật đơn hàng thất bại");
     }
 
@@ -115,12 +119,12 @@ export default function OrderDetailPage() {
     );
   }
 
-  if (error || !orderDetail) {
+  if (loadFailed || !orderDetail) {
     return (
       <main className="w-full flex-1 p-4 md:p-8 bg-[#f5f6fa] min-h-screen">
         <div className="max-w-300 mx-auto bg-red-50 text-red-600 p-6 rounded-xl border border-red-100">
           <div className="font-semibold mb-3">Không thể mở trang chỉnh sửa đơn hàng</div>
-          <div className="mb-4">{error || "Đơn hàng không tồn tại"}</div>
+          <div className="mb-4">Đơn hàng không tồn tại</div>
           <button type="button" onClick={() => router.push("/admin/order")} className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors">
             Quay lại danh sách
           </button>

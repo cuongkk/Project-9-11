@@ -17,7 +17,24 @@ export interface IAccountAdmin extends Document {
   deleted: boolean;
   deletedBy?: string;
   deletedAt?: Date;
+  cart?: {
+    tourId: string;
+    quantity: number;
+    locationFrom?: string;
+    departureDate?: Date;
+  }[];
+  walletBalance?: number;
 }
+
+const cartItemSchema = new Schema(
+  {
+    tourId: { type: String, required: true },
+    quantity: { type: Number, default: 1 },
+    locationFrom: { type: String },
+    departureDate: { type: Date },
+  },
+  { _id: false },
+);
 
 const schema = new Schema<IAccountAdmin>(
   {
@@ -34,6 +51,8 @@ const schema = new Schema<IAccountAdmin>(
     createdBy: { type: String },
     updatedBy: { type: String },
     slug: { type: String, unique: true },
+    cart: { type: [cartItemSchema], default: [] },
+    walletBalance: { type: Number, default: 0, min: 0 },
     deleted: { type: Boolean, default: false },
     deletedBy: { type: String },
     deletedAt: { type: Date },

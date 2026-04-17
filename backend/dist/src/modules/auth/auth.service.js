@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.refresh = exports.getMe = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.register = exports.login = void 0;
+exports.refresh = exports.walletPay = exports.getWalletBalance = exports.uploadMyAvatar = exports.changePassword = exports.updateMe = exports.getMe = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.register = exports.login = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const slugify_1 = __importDefault(require("slugify"));
 const account_model_1 = __importDefault(require("./account.model"));
@@ -12,9 +12,25 @@ const generate_helper_1 = require("../../utils/generate.helper");
 const mail_helper_1 = require("../../utils/mail.helper");
 const auth_tokens_1 = require("./auth.tokens");
 const error_middleware_1 = require("../../middlewares/error.middleware");
+const serializeAccount = (accountInput) => {
+    var _a, _b;
+    const account = (accountInput === null || accountInput === void 0 ? void 0 : accountInput.toObject) ? accountInput.toObject() : accountInput;
+    return {
+        id: ((_b = (_a = account === null || account === void 0 ? void 0 : account._id) === null || _a === void 0 ? void 0 : _a.toString) === null || _b === void 0 ? void 0 : _b.call(_a)) || "",
+        fullName: (account === null || account === void 0 ? void 0 : account.fullName) || "",
+        email: (account === null || account === void 0 ? void 0 : account.email) || "",
+        phone: (account === null || account === void 0 ? void 0 : account.phone) || "",
+        avatar: (account === null || account === void 0 ? void 0 : account.avatar) || "",
+        role: (account === null || account === void 0 ? void 0 : account.role) || "client",
+        status: (account === null || account === void 0 ? void 0 : account.status) || "",
+        walletBalance: Number((account === null || account === void 0 ? void 0 : account.walletBalance) || 0),
+        createdAt: account === null || account === void 0 ? void 0 : account.createdAt,
+        updatedAt: account === null || account === void 0 ? void 0 : account.updatedAt,
+    };
+};
 const login = async (req) => {
     const { email, password, rememberPassword } = req.body;
-    const existAccount = await account_model_1.default.findOne({ email });
+    const existAccount = await account_model_1.default.findOne({ email, deleted: false });
     if (!existAccount) {
         throw new error_middleware_1.HttpError(401, "Email không tồn tại trong hệ thống");
     }
@@ -26,7 +42,7 @@ const login = async (req) => {
         throw new error_middleware_1.HttpError(403, "Tài khoản chưa được kích hoạt");
     }
     const userId = existAccount._id.toString();
-    const userType = "admin";
+    const userType = (existAccount.role || "client").toLowerCase() === "admin" ? "admin" : "client";
     const accessToken = (0, auth_tokens_1.signAccessToken)({ sub: userId, userType });
     const jti = (0, auth_tokens_1.newJti)();
     const refreshToken = (0, auth_tokens_1.signRefreshToken)({ sub: userId, userType, jti }, Boolean(rememberPassword));
@@ -49,7 +65,7 @@ const login = async (req) => {
 exports.login = login;
 const register = async (req) => {
     const { fullName, email, password, ...rest } = req.body;
-    const existAccount = await account_model_1.default.findOne({ email });
+    const existAccount = await account_model_1.default.findOne({ email, deleted: false });
     if (existAccount) {
         throw new error_middleware_1.HttpError(409, "Email đã tồn tại, vui lòng sử dụng email khác");
     }
@@ -57,7 +73,8 @@ const register = async (req) => {
         ...rest,
         fullName,
         email,
-        status: "initial",
+        status: "active",
+        role: rest.role || "client",
     };
     if (fullName) {
         data.slug = (0, slugify_1.default)(fullName, { lower: true, strict: true });
@@ -131,7 +148,7 @@ const getMe = async (req) => {
     const accountFromMiddleware = req.account;
     if (accountFromMiddleware) {
         return {
-            account: accountFromMiddleware,
+            account: serializeAccount(accountFromMiddleware),
         };
     }
     const tokenFromHeader = ((_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.startsWith("Bearer ")) ? req.headers.authorization.split(" ")[1] : undefined;
@@ -146,7 +163,7 @@ const getMe = async (req) => {
             throw new error_middleware_1.HttpError(404, "Tài khoản không tồn tại");
         }
         return {
-            account,
+            account: serializeAccount(account),
         };
     }
     catch (error) {
@@ -154,10 +171,136 @@ const getMe = async (req) => {
     }
 };
 exports.getMe = getMe;
+const updateMe = async (req) => {
+    const accountFromMiddleware = req.account;
+    if (!(accountFromMiddleware === null || accountFromMiddleware === void 0 ? void 0 : accountFromMiddleware._id)) {
+        throw new error_middleware_1.HttpError(401, "Bạn cần đăng nhập để cập nhật thông tin");
+    }
+    const { fullName, phone, avatar } = req.body;
+    const updates = {};
+    if (typeof fullName === "string") {
+        const normalizedName = fullName.trim();
+        if (!normalizedName) {
+            throw new error_middleware_1.HttpError(400, "Họ và tên không hợp lệ");
+        }
+        updates.fullName = normalizedName;
+        updates.slug = (0, slugify_1.default)(normalizedName, { lower: true, strict: true });
+    }
+    if (phone !== undefined) {
+        updates.phone = typeof phone === "string" ? phone.trim() : "";
+    }
+    if (avatar !== undefined) {
+        updates.avatar = typeof avatar === "string" ? avatar.trim() : "";
+    }
+    if (Object.keys(updates).length === 0) {
+        throw new error_middleware_1.HttpError(400, "Không có dữ liệu để cập nhật");
+    }
+    const updatedAccount = await account_model_1.default.findByIdAndUpdate(accountFromMiddleware._id, { $set: updates }, { new: true });
+    if (!updatedAccount) {
+        throw new error_middleware_1.HttpError(404, "Tài khoản không tồn tại");
+    }
+    return {
+        account: serializeAccount(updatedAccount),
+    };
+};
+exports.updateMe = updateMe;
+const changePassword = async (req) => {
+    const accountFromMiddleware = req.account;
+    if (!(accountFromMiddleware === null || accountFromMiddleware === void 0 ? void 0 : accountFromMiddleware._id)) {
+        throw new error_middleware_1.HttpError(401, "Bạn cần đăng nhập để đổi mật khẩu");
+    }
+    const { currentPassword, newPassword } = req.body;
+    if (currentPassword === newPassword) {
+        throw new error_middleware_1.HttpError(400, "Mật khẩu mới phải khác mật khẩu hiện tại");
+    }
+    const account = await account_model_1.default.findById(accountFromMiddleware._id);
+    if (!account) {
+        throw new error_middleware_1.HttpError(404, "Tài khoản không tồn tại");
+    }
+    const isPasswordValid = await bcryptjs_1.default.compare(currentPassword, account.password);
+    if (!isPasswordValid) {
+        throw new error_middleware_1.HttpError(400, "Mật khẩu hiện tại không chính xác");
+    }
+    const newPasswordHash = await bcryptjs_1.default.hash(newPassword, 10);
+    await account_model_1.default.updateOne({ _id: account._id }, {
+        $set: {
+            password: newPasswordHash,
+        },
+        $unset: {
+            refreshTokenHash: "",
+            refreshTokenJti: "",
+        },
+    });
+    return {
+        ok: true,
+    };
+};
+exports.changePassword = changePassword;
+const uploadMyAvatar = async (req) => {
+    const accountFromMiddleware = req.account;
+    if (!(accountFromMiddleware === null || accountFromMiddleware === void 0 ? void 0 : accountFromMiddleware._id)) {
+        throw new error_middleware_1.HttpError(401, "Bạn cần đăng nhập để cập nhật ảnh đại diện");
+    }
+    const uploadedFile = req.file;
+    const avatarUrl = (uploadedFile === null || uploadedFile === void 0 ? void 0 : uploadedFile.path) || (uploadedFile === null || uploadedFile === void 0 ? void 0 : uploadedFile.secure_url);
+    if (!avatarUrl) {
+        throw new error_middleware_1.HttpError(400, "Không tìm thấy tệp ảnh hợp lệ");
+    }
+    const updatedAccount = await account_model_1.default.findByIdAndUpdate(accountFromMiddleware._id, { $set: { avatar: String(avatarUrl).trim() } }, { new: true });
+    if (!updatedAccount) {
+        throw new error_middleware_1.HttpError(404, "Tài khoản không tồn tại");
+    }
+    return {
+        avatar: updatedAccount.avatar || "",
+        account: serializeAccount(updatedAccount),
+    };
+};
+exports.uploadMyAvatar = uploadMyAvatar;
+const getWalletBalance = async (req) => {
+    const accountFromMiddleware = req.account;
+    if (!(accountFromMiddleware === null || accountFromMiddleware === void 0 ? void 0 : accountFromMiddleware._id)) {
+        throw new error_middleware_1.HttpError(401, "Bạn cần đăng nhập để xem số dư");
+    }
+    const account = await account_model_1.default.findById(accountFromMiddleware._id);
+    if (!account) {
+        throw new error_middleware_1.HttpError(404, "Tài khoản không tồn tại");
+    }
+    return {
+        balance: Number(account.walletBalance || 0),
+    };
+};
+exports.getWalletBalance = getWalletBalance;
+const walletPay = async (req) => {
+    const accountFromMiddleware = req.account;
+    if (!(accountFromMiddleware === null || accountFromMiddleware === void 0 ? void 0 : accountFromMiddleware._id)) {
+        throw new error_middleware_1.HttpError(401, "Bạn cần đăng nhập để thanh toán");
+    }
+    const { amount } = req.body;
+    const normalizedAmount = Number(amount);
+    if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
+        throw new error_middleware_1.HttpError(400, "Số tiền thanh toán không hợp lệ");
+    }
+    const account = await account_model_1.default.findById(accountFromMiddleware._id);
+    if (!account) {
+        throw new error_middleware_1.HttpError(404, "Tài khoản không tồn tại");
+    }
+    const currentBalance = Number(account.walletBalance || 0);
+    if (currentBalance < normalizedAmount) {
+        throw new error_middleware_1.HttpError(400, "Số dư không đủ để thanh toán");
+    }
+    const nextBalance = Number((currentBalance - normalizedAmount).toFixed(2));
+    await account_model_1.default.updateOne({ _id: account._id }, { $set: { walletBalance: nextBalance } });
+    return {
+        paidAmount: normalizedAmount,
+        balance: nextBalance,
+        transactionCode: `PAY-${Date.now()}`,
+    };
+};
+exports.walletPay = walletPay;
 const refresh = async (req) => {
     const { refreshToken } = req.body;
     const decoded = (0, auth_tokens_1.verifyRefreshToken)(refreshToken);
-    if (decoded.userType !== "admin") {
+    if (decoded.userType !== "admin" && decoded.userType !== "client") {
         throw new error_middleware_1.HttpError(403, "Unsupported user type");
     }
     const account = await account_model_1.default.findOne({

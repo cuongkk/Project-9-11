@@ -32,13 +32,19 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const multer_1 = __importDefault(require("multer"));
 const authController = __importStar(require("./auth.controller"));
 const auth_middleware_1 = require("../../middlewares/auth.middleware");
 const validate_middleware_1 = require("../../middlewares/validate.middleware");
+const cloudinary_helper_1 = require("../../utils/cloudinary.helper");
 const auth_validation_1 = require("./auth.validation");
 const router = (0, express_1.Router)();
+const upload = (0, multer_1.default)({ storage: cloudinary_helper_1.storage });
 router.get("/login", authController.login);
 router.post("/login", (0, validate_middleware_1.validate)({ body: auth_validation_1.loginBodySchema }), authController.loginPost);
 router.get("/register", authController.register);
@@ -50,6 +56,11 @@ router.post("/otp-password", (0, validate_middleware_1.validate)({ body: auth_va
 router.get("/reset-password", authController.resetPassword);
 router.post("/reset-password", auth_middleware_1.verifyToken, (0, validate_middleware_1.validate)({ body: auth_validation_1.resetPasswordBodySchema }), authController.resetPasswordPost);
 router.get("/me", auth_middleware_1.verifyToken, authController.getMe);
+router.patch("/me", auth_middleware_1.verifyToken, (0, validate_middleware_1.validate)({ body: auth_validation_1.updateProfileBodySchema }), authController.updateMePatch);
+router.post("/avatar/upload", auth_middleware_1.verifyToken, upload.single("avatar"), authController.uploadAvatarPost);
+router.patch("/change-password", auth_middleware_1.verifyToken, (0, validate_middleware_1.validate)({ body: auth_validation_1.changePasswordBodySchema }), authController.changePasswordPatch);
+router.get("/wallet/balance", auth_middleware_1.verifyToken, authController.walletBalance);
+router.post("/wallet/pay", auth_middleware_1.verifyToken, (0, validate_middleware_1.validate)({ body: auth_validation_1.walletPayBodySchema }), authController.walletPayPost);
 router.get("/logout", authController.logout);
 router.post("/refresh", (0, validate_middleware_1.validate)({ body: auth_validation_1.refreshBodySchema }), authController.refreshPost);
 exports.default = router;

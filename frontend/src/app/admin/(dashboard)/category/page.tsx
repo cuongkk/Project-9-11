@@ -48,7 +48,7 @@ export default function CategoryListPage() {
   const [page, setPage] = useState(1);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [fetchFailed, setFetchFailed] = useState(false);
   const [rows, setRows] = useState<CategoryItem[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<CategoryNode[]>([]);
   const [pagination, setPagination] = useState<PageData["pagination"]>({
@@ -88,6 +88,7 @@ export default function CategoryListPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setFetchFailed(false);
 
       const [listResponse, createResponse] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/category/list?${queryString}`, {
@@ -124,7 +125,7 @@ export default function CategoryListPage() {
       setPagination(listPayload.pagination || { totalPage: 1, totalRecord: 0, limitItems: 0, skip: 0 });
       setSelectedIds([]);
     } catch (requestError: any) {
-      setError(requestError.message || "Lỗi kết nối. Vui lòng thử lại.");
+      setFetchFailed(true);
       setReloadToast("error", requestError.message || "Lỗi kết nối. Vui lòng thử lại.");
       showReloadToastIfAny();
     } finally {
@@ -320,18 +321,18 @@ export default function CategoryListPage() {
       <div className="rounded-xl bg-white border border-gray-100 shadow-sm overflow-hidden">
         {loading && <div className="p-8 text-sm text-gray-500">Đang tải dữ liệu...</div>}
 
-        {!loading && error && (
+        {!loading && fetchFailed && (
           <div className="p-8">
-            <p className="text-sm text-red-500 mb-3">{error}</p>
+            <p className="text-sm text-red-500 mb-3">Không tải được danh sách danh mục.</p>
             <button type="button" onClick={fetchData} className="h-10 px-4 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700">
               Thử lại
             </button>
           </div>
         )}
 
-        {!loading && rows.length === 0 && <div className="p-8 text-sm text-gray-500">Không có danh mục phù hợp.</div>}
+        {!loading && !fetchFailed && rows.length === 0 && <div className="p-8 text-sm text-gray-500">Không có danh mục phù hợp.</div>}
 
-        {!loading && rows.length > 0 && (
+        {!loading && !fetchFailed && rows.length > 0 && (
           <>
             <div className="overflow-x-auto">
               <table className="w-full min-w-245 text-sm">

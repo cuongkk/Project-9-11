@@ -85,6 +85,31 @@ export const getMe = asyncHandler(async (req: Request, res: Response): Promise<v
   sendSuccess(res, "Lấy thông tin người dùng thành công", data);
 });
 
+export const updateMePatch = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.updateMe(req);
+  sendSuccess(res, "Cập nhật thông tin người dùng thành công", data);
+});
+
+export const changePasswordPatch = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.changePassword(req);
+  sendSuccess(res, "Đổi mật khẩu thành công", data);
+});
+
+export const uploadAvatarPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.uploadMyAvatar(req);
+  sendSuccess(res, "Tải ảnh đại diện thành công", data);
+});
+
+export const walletBalance = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.getWalletBalance(req);
+  sendSuccess(res, "Lấy số dư tài khoản thành công", data);
+});
+
+export const walletPayPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.walletPay(req);
+  sendSuccess(res, "Thanh toán thành công", data);
+});
+
 export const refreshPost = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const data = await authService.refresh(req);
 

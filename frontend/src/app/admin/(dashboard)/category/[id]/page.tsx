@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { setReloadToast } from "@/utils/toast";
+import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
 import CategoryEdit, { CategoryDetail } from "@/components/features/category/CategoryEdit";
 import type { CategoryNode } from "@/components/features/category/CategoryCreate";
 
@@ -30,7 +30,7 @@ export default function CategoryEditPage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [fetchFailed, setFetchFailed] = useState(false);
   const [detail, setDetail] = useState<CategoryDetail | null>(null);
   const [categoryOptions, setCategoryOptions] = useState<CategoryNode[]>([]);
 
@@ -39,7 +39,7 @@ export default function CategoryEditPage() {
 
     try {
       setLoading(true);
-      setError("");
+      setFetchFailed(false);
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/category/edit/${id}`, {
         credentials: "include",
@@ -55,7 +55,9 @@ export default function CategoryEditPage() {
       setDetail(mapDetail(payload.categoryDetail));
       setCategoryOptions(mapTree(payload.categoryList || []));
     } catch (requestError: any) {
-      setError(requestError.message || "Đã có lỗi xảy ra");
+      setFetchFailed(true);
+      setReloadToast("error", requestError.message || "Đã có lỗi xảy ra");
+      showReloadToastIfAny();
     } finally {
       setLoading(false);
     }
@@ -95,16 +97,16 @@ export default function CategoryEditPage() {
 
       {loading && <div className="rounded-xl border border-gray-100 bg-white shadow-sm p-6 text-sm text-gray-500">Đang tải dữ liệu danh mục...</div>}
 
-      {!loading && error && (
+      {!loading && fetchFailed && (
         <div className="rounded-xl border border-red-100 bg-red-50 p-6">
-          <p className="text-sm text-red-500 mb-3">{error}</p>
+          <p className="text-sm text-red-500 mb-3">Không thể tải dữ liệu danh mục.</p>
           <button type="button" onClick={fetchDetail} className="h-10 px-4 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700">
             Thử lại
           </button>
         </div>
       )}
 
-      {!loading && !error && detail && <CategoryEdit detail={detail} categoryOptions={categoryOptions} onSubmit={handleSubmit} onCancel={() => router.push("/admin/category")} />}
+      {!loading && !fetchFailed && detail && <CategoryEdit detail={detail} categoryOptions={categoryOptions} onSubmit={handleSubmit} onCancel={() => router.push("/admin/category")} />}
     </div>
   );
 }

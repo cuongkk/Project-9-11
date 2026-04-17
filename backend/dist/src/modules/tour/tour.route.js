@@ -56,7 +56,7 @@ router.post("/create", upload.fields([
         name: "images",
         maxCount: 10,
     },
-]), tourController.createPost);
+]), (0, validate_middleware_1.validate)({ body: module_validation_1.createTourBodySchema }), tourController.createPost);
 router.get("/edit/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), tourController.edit);
 router.patch("/edit/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), upload.fields([
     {
@@ -67,7 +67,7 @@ router.patch("/edit/:id", (0, validate_middleware_1.validate)({ params: common_v
         name: "images",
         maxCount: 10,
     },
-]), tourController.editPatch);
+]), (0, validate_middleware_1.validate)({ body: module_validation_1.editTourBodySchema }), tourController.editPatch);
 router.patch("/delete/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), tourController.deletePatch);
 router.patch("/undo/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), tourController.undoPatch);
 router.delete("/destroy/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), tourController.destroyDel);

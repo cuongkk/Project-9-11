@@ -6,5 +6,8 @@ const validate_middleware_1 = require("../../middlewares/validate.middleware");
 const module_validation_1 = require("../../validates/module.validation");
 const cartRouter = (0, express_1.Router)();
 cartRouter.get("/", cart_controller_1.CartController.cart);
+cartRouter.post("/items", (0, validate_middleware_1.validate)({ body: module_validation_1.cartAddItemBodySchema }), cart_controller_1.CartController.addItem);
+cartRouter.patch("/items/:tourId", (0, validate_middleware_1.validate)({ params: module_validation_1.cartTourIdParamSchema, body: module_validation_1.cartUpdateQuantityBodySchema }), cart_controller_1.CartController.updateItemQuantity);
+cartRouter.delete("/items/:tourId", (0, validate_middleware_1.validate)({ params: module_validation_1.cartTourIdParamSchema }), cart_controller_1.CartController.removeItem);
 cartRouter.post("/render", (0, validate_middleware_1.validate)({ body: module_validation_1.cartRenderBodySchema }), cart_controller_1.CartController.render);
 exports.default = cartRouter;
