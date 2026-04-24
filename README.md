@@ -1,29 +1,30 @@
-# 🌏 TravelKa — Nền tảng Đặt Tour Du lịch
+# TravelKa - Tour Booking Platform
 
-> **TravelKa** là một ứng dụng web fullstack hiện đại để đặt tour du lịch trực tuyến, tích hợp thanh toán điện tử và hỗ trợ AI thông minh.
+> **TravelKa** is a modern fullstack web application for online tour booking, integrated with e-payment gateways and smart AI support.
 
 ---
 
-## ✨ Tính năng nổi bật
+## Key Features
 
-| Tính năng | Mô tả |
-|---|---|
-| 🔐 **Xác thực JWT** | Đăng ký, đăng nhập, refresh token, phân quyền Admin / Client |
-| 🗺️ **Quản lý Tour** | CRUD tour, upload ảnh Cloudinary, tìm kiếm & lọc nâng cao |
-| 🛒 **Giỏ hàng & Đặt hàng** | Quản lý giỏ hàng, áp dụng voucher, đặt tour |
-| 💳 **Thanh toán tích hợp** | Thanh toán qua **ZaloPay** & **MoMo** (sandbox), callback & xác thực chữ ký |
-| 🤖 **AI Content Generator** | Tạo nội dung SEO tự động bằng Google Gemini AI |
-| 📊 **Admin Dashboard** | Thống kê doanh thu, quản lý đơn hàng, người dùng, sản phẩm |
-| 📝 **Blog & Journal** | Quản lý bài viết du lịch với TinyMCE editor |
-| ⭐ **Review & Đánh giá** | Hệ thống đánh giá tour theo sao |
-| 🎫 **Voucher System** | Tạo và áp dụng mã giảm giá với điều kiện |
-| 📧 **Gửi Email** | Xác nhận đặt tour, reset password qua Nodemailer |
+| Feature                  | Description                                                                       |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| **JWT Authentication**   | Register, login, refresh token, and Admin/Client role authorization               |
+| **Tour Management**      | Tour CRUD, Cloudinary image upload, advanced search and filtering                 |
+| **Cart and Orders**      | Cart management, voucher application, and tour booking                            |
+| **Integrated Payments**  | **ZaloPay** and **MoMo** (sandbox), callback handling, and signature verification |
+| **AI Content Generator** | Auto-generate SEO content with Google Gemini AI                                   |
+| **Admin Dashboard**      | Revenue analytics, order management, user and product administration              |
+| **Blog and Journal**     | Travel article management with TinyMCE editor                                     |
+| **Reviews and Ratings**  | Star-based tour rating system                                                     |
+| **Voucher System**       | Create and apply discount codes with conditions                                   |
+| **Email Service**        | Booking confirmation and password reset via Nodemailer                            |
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Backend
+
 - **Runtime:** Node.js + TypeScript
 - **Framework:** Express.js v5
 - **Database:** MongoDB + Mongoose ODM
@@ -36,6 +37,7 @@
 - **Validation:** Joi
 
 ### Frontend
+
 - **Framework:** Next.js 16 (App Router) + TypeScript
 - **Styling:** Tailwind CSS v4
 - **UI Components:** MUI (Material UI), Lucide, Phosphor Icons
@@ -48,14 +50,14 @@
 
 ---
 
-## 📁 Cấu trúc dự án
+## Project Structure
 
 ```
 Project-5/
 ├── backend/               # Express.js REST API
 │   ├── src/
-│   │   ├── configs/       # Database, Cloudinary config
-│   │   ├── middlewares/   # Auth, RBAC, Error, Rate limit
+│   │   ├── configs/       # Database and Cloudinary config
+│   │   ├── middlewares/   # Auth, RBAC, error, rate limit
 │   │   ├── modules/       # Feature modules (tour, auth, payment, ai, ...)
 │   │   │   ├── ai/
 │   │   │   ├── auth/
@@ -73,7 +75,7 @@ Project-5/
     │   ├── app/           # Pages (App Router)
     │   │   ├── (client)/  # Client-facing pages
     │   │   └── admin/     # Admin dashboard pages
-    │   ├── components/    # Shared & feature components
+    │   ├── components/    # Shared and feature components
     │   ├── hooks/         # Custom React hooks
     │   ├── interfaces/    # TypeScript types
     │   └── utils/         # Frontend utilities
@@ -82,47 +84,48 @@ Project-5/
 
 ---
 
-## 🚀 Khởi chạy dự án
+## Run The Project
 
-### Yêu cầu hệ thống
+### Requirements
+
 - Node.js >= 18
-- MongoDB (local hoặc MongoDB Atlas)
-- Tài khoản Cloudinary (upload ảnh)
+- MongoDB (local or MongoDB Atlas)
+- Cloudinary account (for image uploads)
 
-### 1. Clone repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/your-username/travelka.git
 cd travelka
 ```
 
-### 2. Cài đặt Backend
+### 2. Setup Backend
 
 ```bash
 cd backend
 cp .env.example .env
-# Điền các biến môi trường vào .env
+# Fill in environment variables in .env
 yarn install
 yarn dev
 ```
 
-> Backend chạy tại: `http://localhost:5000`
+> Backend runs at: `http://localhost:5000`
 
-### 3. Cài đặt Frontend
+### 3. Setup Frontend
 
 ```bash
 cd frontend
 cp .env.example .env.local
-# Điền các biến môi trường vào .env.local
+# Fill in environment variables in .env.local
 yarn install
 yarn dev
 ```
 
-> Frontend chạy tại: `http://localhost:3000`
+> Frontend runs at: `http://localhost:3000`
 
 ---
 
-## ⚙️ Biến môi trường
+## Environment Variables
 
 ### Backend (`backend/.env`)
 
@@ -168,18 +171,18 @@ NEXT_PUBLIC_API_URL=http://localhost:5000
 
 ## 🔌 API Overview
 
-| Method | Endpoint | Mô tả |
-|---|---|---|
-| `POST` | `/auth/register` | Đăng ký tài khoản |
-| `POST` | `/auth/login` | Đăng nhập |
-| `GET` | `/dashboard/tours` | Danh sách tour public |
-| `GET` | `/dashboard/tours/:slug` | Chi tiết tour |
-| `POST` | `/cart` | Thêm vào giỏ hàng |
-| `POST` | `/order` | Tạo đơn hàng |
-| `POST` | `/payment/zalopay` | Thanh toán ZaloPay |
-| `POST` | `/payment/momo` | Thanh toán MoMo |
-| `POST` | `/ai/generate-content` | Tạo nội dung AI |
-| `GET` | `/health` | Health check |
+| Method | Endpoint                 | Description            |
+| ------ | ------------------------ | ---------------------- |
+| `POST` | `/auth/register`         | Register a new account |
+| `POST` | `/auth/login`            | Log in                 |
+| `GET`  | `/dashboard/tours`       | Public tour list       |
+| `GET`  | `/dashboard/tours/:slug` | Tour details           |
+| `POST` | `/cart`                  | Add item to cart       |
+| `POST` | `/order`                 | Create an order        |
+| `POST` | `/payment/zalopay`       | Pay with ZaloPay       |
+| `POST` | `/payment/momo`          | Pay with MoMo          |
+| `POST` | `/ai/generate-content`   | Generate AI content    |
+| `GET`  | `/health`                | Health check           |
 
 ---
 
