@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaArrowRight, FaLocationDot, FaStar, FaHeart } from "react-icons/fa6";
+import { FaArrowRight, FaLocationDot, FaStar } from "react-icons/fa6";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
@@ -20,49 +20,9 @@ export function TourCard({ tour }: TourCardProps) {
   const reviewCount = Math.max(0, tour.reviewCount || 0);
 
   const { userInfo, isLogin, mutate } = useAuth();
-  const isWishlisted = userInfo?.wishlist?.includes((tour as any).id) || false;
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleToggleWishlist = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!isLogin) {
-      setReloadToast("error", "Vui lòng đăng nhập để lưu tour yêu thích");
-      showReloadToastIfAny();
-      return;
-    }
-
-    if (isLoading) return;
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/wishlist/toggle`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ tourId: (tour as any).id }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.message || "Lỗi cập nhật wishlist");
-
-      // Reload auth info directly to reflect wishlist changes quickly
-      mutate();
-    } catch (err: any) {
-      setReloadToast("error", err.message);
-      showReloadToastIfAny();
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <article className="group bg-surface-container-lowest rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-[0_24px_48px_-12px_rgba(17,24,39,0.12)] border border-surface-container-high/50 relative">
-      <button
-        onClick={handleToggleWishlist}
-        disabled={isLoading}
-        className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full flex items-center justify-center bg-white/50 backdrop-blur-md shadow-sm hover:scale-110 transition-transform disabled:opacity-50"
-      >
-        <FaHeart className={`text-lg transition-colors ${isWishlisted ? "text-red-500" : "text-gray-400"}`} />
-      </button>
+
 
       <div className="aspect-4/3 overflow-hidden relative bg-surface-container-low">
         {/* eslint-disable-next-line @next/next/no-img-element */}
